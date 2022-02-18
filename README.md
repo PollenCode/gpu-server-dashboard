@@ -20,4 +20,4 @@ Before you can develop this repo locally, you follow a few steps:
 
 When you adjust the database schema (`prisma/schema.prisma`), you must update the local database using migrations.
 
-Run `npx prisma migrate dev`.
+Run `npx prisma migrate dev` to update your local database.
