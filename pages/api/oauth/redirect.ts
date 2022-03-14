@@ -13,9 +13,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         let oauthParams = msOauth.callbackParams(req);
         let token = await msOauth.callback(process.env.OAUTH_MS_REDIRECT_URL!, oauthParams);
 
-        res.json({
-            token,
-        });
+        // TODO set cookie
+        console.log("OAuth complete", token);
+
+        res.redirect("/app");
     } else {
         return res.status(405).end();
     }

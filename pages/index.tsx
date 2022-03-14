@@ -1,21 +1,23 @@
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, ButtonGroup, CloseButton, Container, IconButton } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, ButtonGroup, Center, CloseButton, Container } from "@chakra-ui/react";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 import React from "react";
+import { NavBar } from "../components/NavBar";
+import { SERVER_URL } from "../util";
 
-export default function Home() {
+export default function () {
     return (
-        <Container>
-            <Alert status="error" mt={8}>
-                <AlertIcon />
-                <AlertTitle mr={2}>Your browser is outdated!</AlertTitle>
-                <AlertDescription>Your experience may be degraded.</AlertDescription>
-                <CloseButton position="absolute" right="8px" top="8px" />
-            </Alert>
-            <ButtonGroup isAttached mt={8}>
-                <Button>This is a testing button</Button>
-                <IconButton aria-label="Remove" icon={<FontAwesomeIcon icon={faTrash} />} />
-            </ButtonGroup>
-        </Container>
+        <Box bg="gray.100" minH="100vh">
+            <NavBar />
+            <Container as="main" maxW="container.lg">
+                <Center height="96" border="4px dotted" borderColor="gray.300" mt={8} rounded="2xl">
+                    <Alert status="info" maxW="400px" rounded="lg" shadow="sm">
+                        <AlertIcon />
+                        Here will be some general information about the current running job without being logged in.
+                    </Alert>
+                </Center>
+            </Container>
+        </Box>
     );
 }
