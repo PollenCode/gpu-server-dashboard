@@ -1,10 +1,11 @@
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, ButtonGroup, Center, CloseButton, Container } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, ButtonGroup, Center, CloseButton, Code, Container } from "@chakra-ui/react";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import React from "react";
+import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
-import { SERVER_URL } from "../util";
+import { fetcher, SERVER_URL } from "../util";
 
 export default function () {
     return (
