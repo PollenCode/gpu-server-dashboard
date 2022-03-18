@@ -7,7 +7,7 @@ import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { fetcher, SERVER_URL } from "../util";
 
-export default function () {
+export default function Index() {
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar />

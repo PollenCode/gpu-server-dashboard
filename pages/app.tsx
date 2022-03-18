@@ -1,11 +1,19 @@
 import { Box, Container, Alert, AlertIcon, Code } from "@chakra-ui/react";
-import React from "react";
+import { useRouter } from "next/router";
+import React, { useEffect } from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { fetcher, SERVER_URL } from "../util";
 
-export default function () {
-    const { data: user } = useSWR(SERVER_URL + "/api/user", fetcher);
+export default function App() {
+    const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isValidating && !user) {
+            router.push("/");
+        }
+    }, [user, isValidating]);
 
     return (
         <Box bg="gray.100" minH="100vh">
