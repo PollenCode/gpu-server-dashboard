@@ -2,7 +2,7 @@
   "name": "2122agileteamproject-gpuserver-webapp",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 5000 & local-ssl-proxy --source 5001 --target 5000",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
