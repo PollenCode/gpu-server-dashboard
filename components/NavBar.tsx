@@ -28,7 +28,7 @@ export function NavBar() {
                             </Link>
                             {!router.asPath.startsWith("/app") && (
                                 <Link href={"/app"}>
-                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as any} />}>
                                         To app
                                     </Button>
                                 </Link>
@@ -36,7 +36,7 @@ export function NavBar() {
                         </ButtonGroup>
                     ) : (
                         <Link href={SERVER_URL + "/api/oauth"}>
-                            <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                            <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as any} />}>
                                 Log in
                             </Button>
                         </Link>
