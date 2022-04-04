@@ -14,4 +14,20 @@ model User {
     id       Int    @id @default(autoincrement())
     userName String
     email    String @unique
+    role     Int    @default(0)
+    tasks    Task[]
+}
+
+model Task {
+    id          Int       @id @default(autoincrement())
+    name        String
+    description String?
+    containerId String?
+    gpus        Int[]
+    startDate   DateTime?
+    endDate     DateTime?
+    scriptPath  String?
+
+    owner   User @relation(fields: [ownerId], references: [id])
+    ownerId Int
 }
