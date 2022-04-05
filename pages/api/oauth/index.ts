@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { msOauth, setupOauth } from "../../../msOauth";
+import { msOauth, setupOauth } from "../../../auth";
 import { SERVER_URL } from "../../../util";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
