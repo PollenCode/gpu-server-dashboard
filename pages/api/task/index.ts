@@ -7,7 +7,12 @@ import { GPU_COUNT } from "../../../util";
 function findScheduleSpot(tasks: Task[], trainMilliseconds: number): Date {
     if (tasks.length <= 0) {
         // Schedule in 15 minutes
-        return new Date(new Date().getTime() + 1000 * 60 * 15);
+        let date = new Date(new Date().getTime() + 1000 * 60 * 15);
+        date.setMilliseconds(0);
+        date.setSeconds(0);
+        // Align to next 15 minutes
+        date.setMinutes((Math.floor(date.getMinutes() / 15) + 1) * 15);
+        return date;
     } else {
         // Find a spot between existing tasks
         for (let i = 0; i < tasks.length - 1; i++) {
@@ -94,6 +99,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
             // Use the earliest available spot
             scheduleDate = scheduleDateCandidates[0];
+            scheduleGpus = [0];
             for (let g = 1; g < scheduleDateCandidates.length; g++) {
                 let gpuSpecificScheduleDate = scheduleDateCandidates[g];
                 if (gpuSpecificScheduleDate.getTime() < scheduleDate.getTime()) {
