@@ -15,6 +15,17 @@ import {
     Flex,
     ButtonGroup,
     Spacer,
+    Popover,
+    PopoverArrow,
+    PopoverBody,
+    PopoverCloseButton,
+    PopoverContent,
+    PopoverHeader,
+    PopoverTrigger,
+    Portal,
+    FormControl,
+    Input,
+    Spinner,
 } from "@chakra-ui/react";
 import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -61,10 +72,10 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
             w="full"
             position="absolute"
             overflow="hidden"
-            zIndex={20}
+            zIndex={3}
             cursor="pointer"
             transition="150ms"
-            _hover={{ opacity: "0.9", zIndex: 30 }}>
+            _hover={{ opacity: "0.9", zIndex: 4 }}>
             {endHour - startHour >= 2 && (
                 <>
                     <FontAwesomeIcon icon={faVial} /> {props.task.name}
@@ -74,7 +85,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     );
 }
 
-function Scheduler(props: { tasks: Task[]; weekDay?: Date }) {
+function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) {
     let startOfWeek = props.weekDay ? new Date(props.weekDay) : new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     startOfWeek.setSeconds(0);
@@ -104,10 +115,18 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date }) {
                 });
 
                 return (
-                    <GridItem overflow="visible" borderRadius="lg" background="white" minWidth="200px" border="1px solid" borderColor="gray.300">
+                    <GridItem
+                        opacity={props.loading ? 0.7 : 1}
+                        transition="200ms"
+                        overflow="visible"
+                        borderRadius="lg"
+                        background="white"
+                        minWidth="200px"
+                        border="1px solid"
+                        borderColor="gray.300">
                         <Heading as="h3" size="sm" borderBottom="1px solid" borderBottomColor="gray.300" p={4}>
                             {DAYS_OF_WEEK[dayIndex]}{" "}
-                            <Text fontWeight="normal" as="span">
+                            <Text fontWeight="normal" as="span" fontSize="sm">
                                 {dayStart.toLocaleDateString()}
                             </Text>
                         </Heading>
@@ -136,6 +155,7 @@ export default function App() {
     const router = useRouter();
     const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
     const now = new Date();
+    const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);
 
     async function createTaskTest() {
@@ -171,7 +191,7 @@ export default function App() {
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar />
-            <Container maxWidth="fit-content">
+            <Container maxWidth="max-content">
                 <HStack mt={4}>
                     <Button
                         colorScheme="blue"
@@ -185,9 +205,34 @@ export default function App() {
                         rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
                         Volgende week
                     </Button>
-                    <Button variant="outline" colorScheme="blue" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faCalendarAlt} />}>
-                        Spring naar
-                    </Button>
+                    <Popover>
+                        <PopoverTrigger>
+                            <Button variant="outline" colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt} />}>
+                                Spring naar
+                            </Button>
+                        </PopoverTrigger>
+                        <Box>
+                            <PopoverContent>
+                                <PopoverArrow />
+                                <PopoverCloseButton />
+                                <PopoverHeader>Selecteer een datum</PopoverHeader>
+                                <PopoverBody>
+                                    <form
+                                        onSubmit={(ev) => {
+                                            ev.preventDefault();
+                                            let date = new Date(jumpDateString);
+                                            console.log("jump to", date);
+                                            setStartDay(date);
+                                        }}>
+                                        <HStack>
+                                            <Input value={jumpDateString} onChange={(ev) => setJumpDateString(ev.target.value)} type="date" />
+                                            <Button type="submit">Ga</Button>
+                                        </HStack>
+                                    </form>
+                                </PopoverBody>
+                            </PopoverContent>
+                        </Box>
+                    </Popover>
                     <Button
                         hidden={
                             startDay.getDate() == now.getDate() &&
@@ -200,12 +245,13 @@ export default function App() {
                         rightIcon={<FontAwesomeIcon icon={faRotateLeft} />}>
                         Naar nu
                     </Button>
+                    {!tasks && <Spinner />}
                     <Spacer />
                     <Button colorScheme="green" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
                         Reserveren
                     </Button>
                 </HStack>
-                {tasks && <Scheduler weekDay={startDay} tasks={tasks} />}
+                <Scheduler weekDay={startDay} tasks={tasks || []} loading={!tasks} />
             </Container>
             {/* <Code as="pre">{JSON.stringify(gpuTasksPerDay, null, 2)}</Code> */}
         </Box>
