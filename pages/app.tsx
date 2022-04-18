@@ -1,14 +1,109 @@
-import { Text, Box, Container, Alert, AlertIcon, Code, Button, Heading } from "@chakra-ui/react";
+import { Task } from ".prisma/client";
+import { Text, Box, Container, Alert, AlertIcon, Code, Button, Heading, HStack, Center, Grid, GridItem, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
-import { fetcher, SERVER_URL } from "../util";
+import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
+
+const GPU_COLORS = ["red.500", "blue.500", "green.500", "orange.500", "purple.500"];
+const DAYS_OF_WEEK = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
+const PIXELS_PER_HOUR = 22;
+
+function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string }) {
+    let startHour, endHour;
+
+    if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
+        // This task started on another day
+        startHour = 0;
+    } else {
+        startHour = new Date(props.task.startDate!).getHours();
+    }
+
+    if (new Date(props.task.endDate!).getTime() > props.dayEnd.getTime()) {
+        // This task will end on another day
+        endHour = 24;
+    } else {
+        endHour = new Date(props.task.endDate!).getHours();
+    }
+
+    return (
+        <Box
+            key={props.task.id}
+            top={startHour * PIXELS_PER_HOUR}
+            height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
+            border="1px solid"
+            borderColor="white"
+            left={0}
+            background={props.color || "red.500"}
+            textColor="white"
+            p={1}
+            rounded="lg"
+            w="full"
+            position="absolute"
+            zIndex={20}>
+            {props.task.name}
+        </Box>
+    );
+}
+
+function Scheduler(props: { tasks: Task[] }) {
+    let startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setSeconds(0);
+    startOfWeek.setMinutes(0);
+    startOfWeek.setHours(0);
+
+    return (
+        <Grid templateColumns="repeat(7, auto)" overflow="auto" gap={4} my={4}>
+            {new Array(7).fill(0).map((_, dayIndex) => {
+                let dayStart = new Date(startOfWeek.getTime() + dayIndex * 24 * 60 * 60 * 1000);
+                let dayEnd = new Date(startOfWeek.getTime() + (dayIndex + 1) * 24 * 60 * 60 * 1000);
+
+                let tasksToday = props.tasks.filter(
+                    (task) =>
+                        (new Date(task.startDate!).getTime() >= dayStart.getTime() && new Date(task.startDate!).getTime() < dayEnd.getTime()) ||
+                        (new Date(task.endDate!).getTime() >= dayStart.getTime() && new Date(task.endDate!).getTime() < dayEnd.getTime())
+                );
+
+                let perGpu = {} as any;
+                tasksToday.forEach((task) => {
+                    task.gpus.forEach((gpuId) => {
+                        if (!(gpuId in perGpu)) {
+                            perGpu[gpuId] = [];
+                        }
+                        perGpu[gpuId].push(task);
+                    });
+                });
+
+                return (
+                    <GridItem borderRadius="lg" background="white" minWidth="200px" border="1px solid" borderColor="gray.300">
+                        <Heading as="h3" size="sm" borderBottom="1px solid" borderBottomColor="gray.300" p={4}>
+                            {DAYS_OF_WEEK[dayIndex]}
+                        </Heading>
+                        <Flex>
+                            {new Array(2).fill(0).map((_, gpuIndex) => (
+                                <Box flexGrow={1} key={gpuIndex} position="relative">
+                                    {new Array(24).fill(0).map((_, hour) => (
+                                        <Box key={hour} borderBottom="1px solid" borderColor="gray.300" h={PIXELS_PER_HOUR + "px"}></Box>
+                                    ))}
+                                    {perGpu[gpuIndex]?.map((task: Task) => (
+                                        <SchedulerTask dayStart={dayStart} dayEnd={dayEnd} color={GPU_COLORS[gpuIndex]} task={task} key={task.id} />
+                                    ))}
+                                </Box>
+                            ))}
+                        </Flex>
+                    </GridItem>
+                );
+            })}
+        </Grid>
+    );
+}
 
 export default function App() {
     const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
     const router = useRouter();
-    const { data: tasks, mutate } = useSWR(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
+    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
 
     async function createTaskTest() {
         let name = prompt("Enter name for task");
@@ -22,7 +117,7 @@ export default function App() {
             body: JSON.stringify({
                 name: name,
                 description: "This is a testing task.",
-                trainMinutes: 45,
+                trainMinutes: (Math.ceil(Math.random() * 10) + 2) * 45,
                 allGpus: false,
             }),
         });
@@ -43,31 +138,13 @@ export default function App() {
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar />
-            <Container>
-                {tasks &&
-                    tasks.map((t: any) => (
-                        <Box key={t.id} p={4} bg="white" rounded="lg" my={4} position="relative" minH="90px">
-                            <Heading as="h3" size="md">
-                                {t.name}
-                            </Heading>
-                            {t.description && (
-                                <Text fontSize="xs" color="gray.400">
-                                    {t.description}
-                                </Text>
-                            )}
-                            <Box position="absolute" right={4} top={3} textAlign="right" color="gray.600">
-                                <Text fontSize="sm">{new Date(t.startDate).toLocaleDateString()}</Text>
-                                <Text fontSize="sm">
-                                    {new Date(t.startDate).toLocaleTimeString()}-{new Date(t.endDate).toLocaleTimeString()}
-                                </Text>
-                                <Text fontSize="sm">{t.gpus.length > 1 ? <>On GPUs {t.gpus.join(", ")}</> : <>On GPU {t.gpus[0]}</>}</Text>
-                            </Box>
-                        </Box>
-                    ))}
+            <Container maxWidth="fit-content">
                 <Button colorScheme="blue" onClick={createTaskTest}>
                     Create task
                 </Button>
+                {tasks && <Scheduler tasks={tasks} />}
             </Container>
+            {/* <Code as="pre">{JSON.stringify(gpuTasksPerDay, null, 2)}</Code> */}
         </Box>
     );
 }
