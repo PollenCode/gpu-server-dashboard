@@ -1,7 +1,25 @@
 import { Task } from ".prisma/client";
-import { Text, Box, Container, Alert, AlertIcon, Code, Button, Heading, HStack, Center, Grid, GridItem, Flex } from "@chakra-ui/react";
+import {
+    Text,
+    Box,
+    Container,
+    Alert,
+    AlertIcon,
+    Code,
+    Button,
+    Heading,
+    HStack,
+    Center,
+    Grid,
+    GridItem,
+    Flex,
+    ButtonGroup,
+    Spacer,
+} from "@chakra-ui/react";
+import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
@@ -38,17 +56,26 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
             background={props.color || "red.500"}
             textColor="white"
             p={1}
+            lineHeight="4"
             rounded="lg"
             w="full"
             position="absolute"
-            zIndex={20}>
-            {props.task.name}
+            overflow="hidden"
+            zIndex={20}
+            cursor="pointer"
+            transition="150ms"
+            _hover={{ opacity: "0.9", zIndex: 30 }}>
+            {endHour - startHour >= 2 && (
+                <>
+                    <FontAwesomeIcon icon={faVial} /> {props.task.name}
+                </>
+            )}
         </Box>
     );
 }
 
-function Scheduler(props: { tasks: Task[] }) {
-    let startOfWeek = new Date();
+function Scheduler(props: { tasks: Task[]; weekDay?: Date }) {
+    let startOfWeek = props.weekDay ? new Date(props.weekDay) : new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     startOfWeek.setSeconds(0);
     startOfWeek.setMinutes(0);
@@ -77,15 +104,19 @@ function Scheduler(props: { tasks: Task[] }) {
                 });
 
                 return (
-                    <GridItem borderRadius="lg" background="white" minWidth="200px" border="1px solid" borderColor="gray.300">
+                    <GridItem overflow="visible" borderRadius="lg" background="white" minWidth="200px" border="1px solid" borderColor="gray.300">
                         <Heading as="h3" size="sm" borderBottom="1px solid" borderBottomColor="gray.300" p={4}>
-                            {DAYS_OF_WEEK[dayIndex]}
+                            {DAYS_OF_WEEK[dayIndex]}{" "}
+                            <Text fontWeight="normal" as="span">
+                                {dayStart.toLocaleDateString()}
+                            </Text>
                         </Heading>
+
                         <Flex>
                             {new Array(2).fill(0).map((_, gpuIndex) => (
                                 <Box flexGrow={1} key={gpuIndex} position="relative">
                                     {new Array(24).fill(0).map((_, hour) => (
-                                        <Box key={hour} borderBottom="1px solid" borderColor="gray.300" h={PIXELS_PER_HOUR + "px"}></Box>
+                                        <Box key={hour} borderBottom="1px solid" borderColor="gray.100" h={PIXELS_PER_HOUR + "px"}></Box>
                                     ))}
                                     {perGpu[gpuIndex]?.map((task: Task) => (
                                         <SchedulerTask dayStart={dayStart} dayEnd={dayEnd} color={GPU_COLORS[gpuIndex]} task={task} key={task.id} />
@@ -104,6 +135,8 @@ export default function App() {
     const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
     const router = useRouter();
     const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
+    const now = new Date();
+    const [startDay, setStartDay] = useState(now);
 
     async function createTaskTest() {
         let name = prompt("Enter name for task");
@@ -139,10 +172,40 @@ export default function App() {
         <Box bg="gray.100" minH="100vh">
             <NavBar />
             <Container maxWidth="fit-content">
-                <Button colorScheme="blue" onClick={createTaskTest}>
-                    Create task
-                </Button>
-                {tasks && <Scheduler tasks={tasks} />}
+                <HStack mt={4}>
+                    <Button
+                        colorScheme="blue"
+                        onClick={() => setStartDay(new Date(startDay.getTime() - 1000 * 60 * 60 * 24 * 7))}
+                        leftIcon={<FontAwesomeIcon icon={faArrowLeft} />}>
+                        Vorige week
+                    </Button>
+                    <Button
+                        colorScheme="blue"
+                        onClick={() => setStartDay(new Date(startDay.getTime() + 1000 * 60 * 60 * 24 * 7))}
+                        rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                        Volgende week
+                    </Button>
+                    <Button variant="outline" colorScheme="blue" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faCalendarAlt} />}>
+                        Spring naar
+                    </Button>
+                    <Button
+                        hidden={
+                            startDay.getDate() == now.getDate() &&
+                            startDay.getMonth() == now.getMonth() &&
+                            startDay.getFullYear() == now.getFullYear()
+                        }
+                        variant="outline"
+                        colorScheme="blue"
+                        onClick={() => setStartDay(now)}
+                        rightIcon={<FontAwesomeIcon icon={faRotateLeft} />}>
+                        Naar nu
+                    </Button>
+                    <Spacer />
+                    <Button colorScheme="green" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                        Reserveren
+                    </Button>
+                </HStack>
+                {tasks && <Scheduler weekDay={startDay} tasks={tasks} />}
             </Container>
             {/* <Code as="pre">{JSON.stringify(gpuTasksPerDay, null, 2)}</Code> */}
         </Box>
