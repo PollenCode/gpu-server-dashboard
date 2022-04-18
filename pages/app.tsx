@@ -35,9 +35,26 @@ import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
 
-const GPU_COLORS = ["red.500", "blue.500", "green.500", "orange.500", "purple.500"];
+const GPU_COLORS = ["red.500", "green.500", "orange.500", "purple.500"];
 const DAYS_OF_WEEK = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
 const PIXELS_PER_HOUR = 22;
+
+function SchedulerNowIndicator() {
+    const hour = new Date().getHours() + new Date().getMinutes() / 60;
+    return (
+        <Box
+            position="absolute"
+            top={hour * PIXELS_PER_HOUR}
+            left={0}
+            w="full"
+            pointerEvents="none"
+            style={{ boxShadow: "0px 0px 10px black" }}
+            zIndex={5}
+            height="2px"
+            rounded="lg"
+            backgroundColor="blue.300"></Box>
+    );
+}
 
 function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string }) {
     let startHour, endHour;
@@ -58,17 +75,15 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
 
     return (
         <Box
-            key={props.task.id}
             top={startHour * PIXELS_PER_HOUR}
             height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
-            border="1px solid"
-            borderColor="white"
+            border="1px solid #ffffff44"
             left={0}
             background={props.color || "red.500"}
             textColor="white"
             p={1}
             lineHeight="4"
-            rounded="lg"
+            rounded="md"
             w="full"
             position="absolute"
             overflow="hidden"
@@ -104,6 +119,9 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
                         (new Date(task.endDate!).getTime() >= dayStart.getTime() && new Date(task.endDate!).getTime() < dayEnd.getTime())
                 );
 
+                let now = new Date();
+                let isToday = now.getTime() >= dayStart.getTime() && now.getTime() < dayEnd.getTime();
+
                 let perGpu = {} as any;
                 tasksToday.forEach((task) => {
                     task.gpus.forEach((gpuId) => {
@@ -116,15 +134,16 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
 
                 return (
                     <GridItem
+                        m={0.5}
                         key={dayIndex}
                         opacity={props.loading ? 0.7 : 1}
                         transition="200ms"
-                        overflow="visible"
+                        overflow="hidden"
                         borderRadius="lg"
                         background="white"
                         minWidth="200px"
-                        border="1px solid"
-                        borderColor="gray.300">
+                        border={isToday ? "3px solid" : "1px solid"}
+                        borderColor={isToday ? "blue.500" : "gray.300"}>
                         <Heading as="h3" size="sm" borderBottom="1px solid" borderBottomColor="gray.300" p={4}>
                             {DAYS_OF_WEEK[dayIndex]}{" "}
                             <Text fontWeight="normal" as="span" fontSize="sm">
@@ -141,6 +160,7 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
                                     {perGpu[gpuIndex]?.map((task: Task) => (
                                         <SchedulerTask dayStart={dayStart} dayEnd={dayEnd} color={GPU_COLORS[gpuIndex]} task={task} key={task.id} />
                                     ))}
+                                    {isToday && <SchedulerNowIndicator />}
                                 </Box>
                             ))}
                         </Flex>
