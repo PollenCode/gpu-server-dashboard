@@ -116,6 +116,7 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
 
                 return (
                     <GridItem
+                        key={dayIndex}
                         opacity={props.loading ? 0.7 : 1}
                         transition="200ms"
                         overflow="visible"
