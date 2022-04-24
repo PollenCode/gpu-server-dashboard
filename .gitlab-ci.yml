@@ -1,7 +1,18 @@
 stages:
 - test
+- build
 main-project:
-  stage: test
+  stage: build
   trigger:
     project: ikdoeict/laurent.aerens/2122agileteamproject-gpuserver
     branch: development
+
+
+compile-and-run-junitest:
+  stage: test
+  image: node:14
+  tags:
+    - "docker"
+  script:
+    - 'npm install'
+    - 'npm run test'
