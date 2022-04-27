@@ -16,3 +16,4 @@ compile-and-run-junitest:
   script:
     - 'npm install'
     - 'npm run test'
+    - 'npm run build'
