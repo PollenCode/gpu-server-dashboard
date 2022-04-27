@@ -85,20 +85,20 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     // Only show the information about this task in a UI spot that can fit x hours
     const FIT_HOURS = 2;
 
-    if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
-        // This task started on another day
-        startHour = 0;
-        showContents = props.dayStart.getTime() - new Date(props.task.startDate!).getTime() < 1000 * 60 * 60 * FIT_HOURS;
-    } else {
-        startHour = new Date(props.task.startDate!).getHours();
-        showContents = startHour < 24 - FIT_HOURS;
-    }
-
     if (new Date(props.task.endDate!).getTime() > props.dayEnd.getTime()) {
         // This task will end on another day
         endHour = 24;
     } else {
         endHour = new Date(props.task.endDate!).getHours();
+    }
+
+    if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
+        // This task started on another day
+        startHour = 0;
+        showContents = false; //props.dayStart.getTime() - new Date(props.task.startDate!).getTime() < 1000 * 60 * 60 * FIT_HOURS;
+    } else {
+        startHour = new Date(props.task.startDate!).getHours();
+        showContents = true; //startHour < 24 - FIT_HOURS;
     }
 
     let now = new Date();
@@ -107,7 +107,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     return (
         <NextLink href={"/task/" + props.task.id}>
             <Box
-                top={startHour * PIXELS_PER_HOUR}
+                top={startHour * PIXELS_PER_HOUR + "px"}
                 height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
                 border="1px solid #ffffff44"
                 left={0}
@@ -321,7 +321,7 @@ function ReserveTaskForm(props: { onClose: () => void }) {
 export default function App() {
     const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
     const router = useRouter();
-    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
+    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 20000 });
     const now = new Date();
     const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);
@@ -405,7 +405,12 @@ export default function App() {
                     <ModalHeader>Taak Reserveren</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <ReserveTaskForm onClose={onClose} />
+                        <ReserveTaskForm
+                            onClose={() => {
+                                mutate();
+                                onClose();
+                            }}
+                        />
                     </ModalBody>
                 </ModalContent>
             </Modal>

@@ -4,7 +4,7 @@ import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
 import { GPU_COUNT } from "../../../util";
 
-function findScheduleSpot(tasks: Task[], trainMilliseconds: number): Date {
+function findScheduleSpot(tasks: Task[], trainMilliseconds: number, allGpus: boolean): Date {
     if (tasks.length <= 0) {
         // Schedule in 15 minutes
         let date = new Date(new Date().getTime() + 1000 * 60 * 15);
@@ -25,8 +25,18 @@ function findScheduleSpot(tasks: Task[], trainMilliseconds: number): Date {
             }
         }
 
-        let last = tasks[tasks.length - 1];
-        return last.endDate!;
+        if (allGpus) {
+            let lastEndingDate = tasks[0].endDate!;
+            for (let i = 1; i < tasks.length; i++) {
+                if (tasks[i].endDate!.getTime() > lastEndingDate.getTime()) {
+                    lastEndingDate = tasks[i].endDate!;
+                }
+            }
+            return lastEndingDate;
+        } else {
+            let last = tasks[tasks.length - 1];
+            return last.endDate!;
+        }
     }
 }
 
@@ -59,9 +69,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                     select: {
                         id: true,
                         userName: true,
-                        email: true
-                    }
-                }
+                        email: true,
+                    },
+                },
             },
         });
 
@@ -91,7 +101,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         let scheduleGpus = [] as number[];
         if (allGpus) {
             // Find a spot where all the gpus aren't used
-            scheduleDate = findScheduleSpot(nextTasks, trainMilliseconds);
+            scheduleDate = findScheduleSpot(nextTasks, trainMilliseconds, true);
             scheduleGpus = new Array(GPU_COUNT).fill(0).map((_, i) => i);
         } else {
             // Find a spot on each specific gpu
@@ -99,7 +109,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             for (let g = 0; g < GPU_COUNT; g++) {
                 let gpuSpecificScheduleDate = findScheduleSpot(
                     nextTasks.filter((e) => e.gpus.includes(g)),
-                    trainMilliseconds
+                    trainMilliseconds,
+                    false
                 );
                 scheduleDateCandidates[g] = gpuSpecificScheduleDate;
             }
