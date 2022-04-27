@@ -26,14 +26,17 @@ import {
     FormControl,
     Input,
     Spinner,
+    Badge,
 } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
+import { UserContext } from "../UserContext";
 import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
 
 const GPU_COLORS = ["red.500", "green.500", "orange.500", "purple.500"];
@@ -58,6 +61,7 @@ function SchedulerNowIndicator() {
 }
 
 function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string }) {
+    const user = useContext(UserContext);
     let startHour, endHour;
 
     if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
@@ -74,30 +78,45 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
         endHour = new Date(props.task.endDate!).getHours();
     }
 
+    let now = new Date();
+    let busy = new Date(props.task.startDate!).getTime() <= now.getTime() && new Date(props.task.endDate!).getTime() > now.getTime();
+
     return (
-        <Box
-            top={startHour * PIXELS_PER_HOUR}
-            height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
-            border="1px solid #ffffff44"
-            left={0}
-            background={props.color || "red.500"}
-            textColor="white"
-            p={1}
-            lineHeight="4"
-            rounded="md"
-            w="full"
-            position="absolute"
-            overflow="hidden"
-            zIndex={3}
-            cursor="pointer"
-            transition="150ms"
-            _hover={{ opacity: "0.9", zIndex: 4 }}>
-            {endHour - startHour >= 2 && (
-                <>
-                    <FontAwesomeIcon icon={faVial as IconProp} /> {props.task.name}
-                </>
-            )}
-        </Box>
+        <Link href={"/task/" + props.task.id}>
+            <Box
+                top={startHour * PIXELS_PER_HOUR}
+                height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
+                border="1px solid #ffffff44"
+                left={0}
+                background={props.color || "red.500"}
+                textColor="white"
+                p={1}
+                lineHeight="4"
+                rounded="md"
+                w="full"
+                position="absolute"
+                overflow="hidden"
+                zIndex={3}
+                cursor="pointer"
+                transition="150ms"
+                _hover={{ opacity: 0.8, zIndex: 4 }}>
+                {endHour - startHour >= 2 && (
+                    <>
+                        <Text>
+                            {busy && <Spinner size="xs" />} {props.task.name}
+                        </Text>
+                        <Text opacity={0.6} fontSize="xs">
+                            {(props.task as any).owner?.userName}
+                        </Text>
+                        {(props.task as any).owner?.id === user?.id && (
+                            <Badge colorScheme="gray" mt={0.5}>
+                                Jouw taak
+                            </Badge>
+                        )}
+                    </>
+                )}
+            </Box>
+        </Link>
     );
 }
 

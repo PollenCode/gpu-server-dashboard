@@ -55,6 +55,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 name: true,
                 gpus: true,
                 id: true,
+                owner: {
+                    select: {
+                        id: true,
+                        userName: true,
+                        email: true
+                    }
+                }
             },
         });
 

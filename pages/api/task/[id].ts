@@ -16,6 +16,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             where: {
                 id: taskId,
             },
+            include: {
+                owner: {
+                    select: {
+                        email: true,
+                        id: true,
+                        userName: true,
+                    }
+                }
+            }
         });
 
         if (!task) return res.status(404).end();
