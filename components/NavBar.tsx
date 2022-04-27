@@ -1,5 +1,6 @@
 import { Box, Container, Flex, Heading, Spacer, Link } from "@chakra-ui/layout";
 import { Button, ButtonGroup } from "@chakra-ui/react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
@@ -28,7 +29,7 @@ export function NavBar() {
                             </Link>
                             {!router.asPath.startsWith("/app") && (
                                 <Link href={"/app"}>
-                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as any} />}>
+                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                                         To app
                                     </Button>
                                 </Link>
@@ -36,7 +37,7 @@ export function NavBar() {
                         </ButtonGroup>
                     ) : (
                         <Link href={SERVER_URL + "/api/oauth"}>
-                            <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as any} />}>
+                            <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                                 Log in
                             </Button>
                         </Link>

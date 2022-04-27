@@ -27,6 +27,7 @@ import {
     Input,
     Spinner,
 } from "@chakra-ui/react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
@@ -93,7 +94,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
             _hover={{ opacity: "0.9", zIndex: 4 }}>
             {endHour - startHour >= 2 && (
                 <>
-                    <FontAwesomeIcon icon={faVial} /> {props.task.name}
+                    <FontAwesomeIcon icon={faVial as IconProp} /> {props.task.name}
                 </>
             )}
         </Box>
@@ -217,18 +218,18 @@ export default function App() {
                     <Button
                         colorScheme="blue"
                         onClick={() => setStartDay(new Date(startDay.getTime() - 1000 * 60 * 60 * 24 * 7))}
-                        leftIcon={<FontAwesomeIcon icon={faArrowLeft} />}>
+                        leftIcon={<FontAwesomeIcon icon={faArrowLeft as IconProp} />}>
                         Vorige week
                     </Button>
                     <Button
                         colorScheme="blue"
                         onClick={() => setStartDay(new Date(startDay.getTime() + 1000 * 60 * 60 * 24 * 7))}
-                        rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                        rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                         Volgende week
                     </Button>
                     <Popover>
                         <PopoverTrigger>
-                            <Button variant="outline" colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt} />}>
+                            <Button variant="outline" colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt as IconProp} />}>
                                 Spring naar
                             </Button>
                         </PopoverTrigger>
@@ -263,12 +264,12 @@ export default function App() {
                         variant="outline"
                         colorScheme="blue"
                         onClick={() => setStartDay(now)}
-                        rightIcon={<FontAwesomeIcon icon={faRotateLeft} />}>
+                        rightIcon={<FontAwesomeIcon icon={faRotateLeft as IconProp} />}>
                         Naar nu
                     </Button>
                     {!tasks && <Spinner />}
                     <Spacer />
-                    <Button colorScheme="green" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faArrowRight} />}>
+                    <Button colorScheme="green" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                         Reserveren
                     </Button>
                 </HStack>
