@@ -15,6 +15,7 @@ import {
     Flex,
     ButtonGroup,
     Spacer,
+    Link,
     Popover,
     PopoverArrow,
     PopoverBody,
@@ -27,11 +28,28 @@ import {
     Input,
     Spinner,
     Badge,
+    useDisclosure,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Slider,
+    SliderFilledTrack,
+    SliderMark,
+    SliderThumb,
+    SliderTrack,
+    Tooltip,
+    FormLabel,
+    FormHelperText,
+    Switch,
 } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faExternalLink, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useRouter } from "next/router";
 import React, { useContext, useEffect, useState } from "react";
 import useSWR from "swr";
@@ -41,7 +59,7 @@ import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
 
 const GPU_COLORS = ["red.500", "green.500", "orange.500", "purple.500"];
 const DAYS_OF_WEEK = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
-const PIXELS_PER_HOUR = 22;
+const PIXELS_PER_HOUR = 28;
 
 function SchedulerNowIndicator() {
     const hour = new Date().getHours() + new Date().getMinutes() / 60;
@@ -62,13 +80,18 @@ function SchedulerNowIndicator() {
 
 function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string }) {
     const user = useContext(UserContext);
-    let startHour, endHour;
+    let startHour, endHour, showContents;
+
+    // Only show the information about this task in a UI spot that can fit x hours
+    const FIT_HOURS = 2;
 
     if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
         // This task started on another day
         startHour = 0;
+        showContents = props.dayStart.getTime() - new Date(props.task.startDate!).getTime() < 1000 * 60 * 60 * FIT_HOURS;
     } else {
         startHour = new Date(props.task.startDate!).getHours();
+        showContents = startHour < 24 - FIT_HOURS;
     }
 
     if (new Date(props.task.endDate!).getTime() > props.dayEnd.getTime()) {
@@ -82,7 +105,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     let busy = new Date(props.task.startDate!).getTime() <= now.getTime() && new Date(props.task.endDate!).getTime() > now.getTime();
 
     return (
-        <Link href={"/task/" + props.task.id}>
+        <NextLink href={"/task/" + props.task.id}>
             <Box
                 top={startHour * PIXELS_PER_HOUR}
                 height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
@@ -100,23 +123,25 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
                 cursor="pointer"
                 transition="150ms"
                 _hover={{ opacity: 0.8, zIndex: 4 }}>
-                {endHour - startHour >= 2 && (
+                {showContents && (
                     <>
                         <Text>
                             {busy && <Spinner size="xs" />} {props.task.name}
                         </Text>
-                        <Text opacity={0.6} fontSize="xs">
-                            {(props.task as any).owner?.userName}
-                        </Text>
-                        {(props.task as any).owner?.id === user?.id && (
+
+                        {(props.task as any).owner?.id === user?.id ? (
                             <Badge colorScheme="gray" mt={0.5}>
                                 Jouw taak
                             </Badge>
+                        ) : (
+                            <Text opacity={0.6} fontSize="xs">
+                                {(props.task as any).owner?.userName}
+                            </Text>
                         )}
                     </>
                 )}
             </Box>
-        </Link>
+        </NextLink>
     );
 }
 
@@ -191,17 +216,19 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
     );
 }
 
-export default function App() {
-    const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
-    const router = useRouter();
-    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
-    const now = new Date();
-    const [jumpDateString, setJumpDateString] = useState("");
-    const [startDay, setStartDay] = useState(now);
+function ReserveTaskForm(props: { onClose: () => void }) {
+    const minHours = 2;
+    const maxHours = 24;
+    const [hourValue, setHourValue] = useState(8);
+    const [taskName, setTaskName] = useState("Nieuwe Taak");
+    const [allGpus, setAllGpus] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    async function createTaskTest() {
-        let name = prompt("Enter name for task");
-        if (!name) return;
+    async function submit() {
+        if (!taskName) return;
+
+        setLoading(true);
+        await new Promise((res) => setTimeout(res, 500));
 
         let res = await fetch(SERVER_URL + "/api/task", {
             method: "POST",
@@ -209,19 +236,96 @@ export default function App() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                name: name,
-                description: "This is a testing task.",
-                trainMinutes: (Math.ceil(Math.random() * 10) + 2) * 45,
-                allGpus: false,
+                name: taskName,
+                description: "",
+                trainMinutes: hourValue * 60,
+                allGpus: allGpus,
             }),
         });
         if (res.ok) {
             console.log("New task", await res.json());
-            mutate();
         } else {
             console.error("Error while creating task", await res.text());
         }
+
+        setLoading(false);
+        props.onClose();
     }
+
+    return (
+        <form
+            onSubmit={(ev) => {
+                ev.preventDefault();
+                submit();
+            }}>
+            <FormControl isDisabled={loading}>
+                <FormLabel>Naam taak</FormLabel>
+                <Input autoFocus defaultValue={taskName} onChange={(ev) => setTaskName(ev.target.value)} />
+            </FormControl>
+            <FormControl mt={6} isDisabled={loading}>
+                <FormLabel>Aantal uren</FormLabel>
+                <Slider
+                    mt={6}
+                    mb={4}
+                    id="slider"
+                    defaultValue={hourValue}
+                    onChange={(value) => setHourValue(value)}
+                    step={0.5}
+                    min={minHours}
+                    max={maxHours}
+                    colorScheme="blue">
+                    <SliderMark value={minHours} mt="1" ml="0" fontSize="sm">
+                        {minHours} uur
+                    </SliderMark>
+                    <SliderMark value={12} mt="1" ml="-2.5" fontSize="sm">
+                        12 uur
+                    </SliderMark>
+                    <SliderMark value={maxHours} mt="1" ml="-10" fontSize="sm">
+                        {maxHours} uur
+                    </SliderMark>
+                    <SliderMark value={hourValue} textAlign="center" bg="blue.500" color="white" mt="-10" ml="-8" w="16" rounded="lg">
+                        {hourValue} uur
+                    </SliderMark>
+                    <SliderTrack>
+                        <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                </Slider>
+                <FormHelperText>Wil je meer tijd? Vraag dit aan een leerkracht.</FormHelperText>
+            </FormControl>
+            <FormControl mt={6} isDisabled={loading}>
+                <FormLabel>Gebruik alle GPU's</FormLabel>
+                <Switch checked={allGpus} onChange={(ev) => setAllGpus(ev.target.checked)} />
+                <FormHelperText>
+                    Standaard wordt enkel 1 GPU gereserveerd, als je taak meerdere GPU's ondersteund, kan je dit aanvragen. Hiervoor moet je extra
+                    code schrijven, zie{" "}
+                    <Link color="blue.500" isExternal href="https://www.tensorflow.org/guide/distributed_training">
+                        hier <FontAwesomeIcon icon={faExternalLink as IconProp} />
+                    </Link>
+                    .
+                </FormHelperText>
+            </FormControl>
+            <HStack mt={6} mb={4}>
+                <Spacer />
+                <Button isLoading={loading} type="submit" colorScheme="green" mr={3}>
+                    Aanvragen
+                </Button>
+                <Button isDisabled={loading} type="button" variant="ghost" onClick={props.onClose}>
+                    Annuleren
+                </Button>
+            </HStack>
+        </form>
+    );
+}
+
+export default function App() {
+    const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
+    const router = useRouter();
+    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 1000 });
+    const now = new Date();
+    const [jumpDateString, setJumpDateString] = useState("");
+    const [startDay, setStartDay] = useState(now);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     useEffect(() => {
         if (!isValidating && !user) {
@@ -288,13 +392,23 @@ export default function App() {
                     </Button>
                     {!tasks && <Spinner />}
                     <Spacer />
-                    <Button colorScheme="green" onClick={createTaskTest} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
+                    <Button colorScheme="green" onClick={onOpen} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                         Reserveren
                     </Button>
                 </HStack>
                 <Scheduler weekDay={startDay} tasks={tasks || []} loading={!tasks} />
             </Container>
-            {/* <Code as="pre">{JSON.stringify(gpuTasksPerDay, null, 2)}</Code> */}
+
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Taak Reserveren</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <ReserveTaskForm onClose={onClose} />
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
