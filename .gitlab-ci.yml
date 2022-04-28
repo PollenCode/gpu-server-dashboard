@@ -15,5 +15,6 @@ compile-and-run-junitest:
     - "docker"
   script:
     - 'npm install'
-    - 'npm run test'
     - 'npm run build'
+    - 'npm run test'
+    
