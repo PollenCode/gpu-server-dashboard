@@ -32,6 +32,7 @@ import {
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 var taskName:string;
 var start:Date;
@@ -82,7 +83,7 @@ export default function TaskById() {
             <NavBar /> 
             <Container maxWidth="80%" alignSelf='center'>
                 <Grid templateColumns='30px 500px 1fr' marginTop={7}>
-                    <GridItem h='10' ><Link href="/app"><FontAwesomeIcon icon={faChevronLeft}/></Link></GridItem>
+                    <GridItem h='10' ><Link href="/app"><FontAwesomeIcon icon={faChevronLeft as IconProp}/></Link></GridItem>
                     <GridItem h='10' marginLeft={4}>
                         <Flex flexDirection='column' h='67vh' gap='5'>
                             <Box h='10'><Text><b>{taskName}</b> ({router.query.id})<Badge colorScheme={statusColor} padding={1} marginLeft={7}>{status}</Badge></Text></Box>
