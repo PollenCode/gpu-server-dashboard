@@ -111,7 +111,7 @@ export default function TaskById() {
                         <Box h='60vh' padding='20px' bg='gray.200' color='black' marginBottom={3} rounded='lg'>
                             <Flex flexDirection='column'>
                                 <Text fontWeight='bold'>This is output from the docker container.</Text>
-                                <Text h='auto' marginTop='10px' bg='gray.300' rounded='lg' padding={3}>output output <br/> output</Text>
+                                <Text h='auto' marginTop='10px' paddingTop='5px' borderTop='1px solid black'>output output <br/> output</Text>
                             </Flex>
                         </Box>
                         <Button color='blue.400'>Verbinden met Jupiter Notebook</Button>                      
