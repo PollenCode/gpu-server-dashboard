@@ -45,9 +45,25 @@ import {
     FormLabel,
     FormHelperText,
     Switch,
+    Drawer,
+    DrawerBody,
+    DrawerCloseButton,
+    DrawerContent,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerOverlay,
 } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faExternalLink, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowLeft,
+    faArrowRight,
+    faCalendar,
+    faCalendarAlt,
+    faChevronLeft,
+    faExternalLink,
+    faRotateLeft,
+    faVial,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
@@ -78,7 +94,7 @@ function SchedulerNowIndicator() {
     );
 }
 
-function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string }) {
+function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?: string; onClick?: (task: Task) => void }) {
     const user = useContext(UserContext);
     let startHour, endHour, showContents;
 
@@ -105,52 +121,50 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     let busy = new Date(props.task.startDate!).getTime() <= now.getTime() && new Date(props.task.endDate!).getTime() > now.getTime();
 
     return (
-        <NextLink href={"/task/" + props.task.id}>
-            <Box
-                top={startHour * PIXELS_PER_HOUR + "px"}
-                height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
-                border="1px solid #ffffff44"
-                left={0}
-                background={props.color || "red.500"}
-                textColor="white"
-                p={1}
-                lineHeight="4"
-                rounded="md"
-                w="full"
-                position="absolute"
-                overflow="hidden"
-                zIndex={3}
-                cursor="pointer"
-                transition="150ms"
-                _hover={{ opacity: 0.8, zIndex: 4 }}>
-                {showContents && (
-                    <>
-                        <Text>
-                            {busy && <Spinner size="xs" />} {props.task.name}
-                        </Text>
+        <Box
+            onClick={() => props.onClick?.(props.task)}
+            top={startHour * PIXELS_PER_HOUR + "px"}
+            height={(endHour - startHour) * PIXELS_PER_HOUR + "px"}
+            border="1px solid #ffffff44"
+            left={0}
+            background={props.color || "red.500"}
+            textColor="white"
+            p={1}
+            lineHeight="4"
+            rounded="md"
+            w="full"
+            position="absolute"
+            overflow="hidden"
+            zIndex={3}
+            cursor="pointer"
+            transition="150ms"
+            _hover={{ opacity: 0.8, zIndex: 4 }}>
+            {showContents && (
+                <>
+                    <Text>
+                        {busy && <Spinner size="xs" />} {props.task.name}
+                    </Text>
 
-                        {(props.task as any).owner?.id === user?.id ? (
-                            <Badge colorScheme="gray" mt={0.5}>
-                                Jouw taak
-                            </Badge>
-                        ) : (
-                            <Text opacity={0.6} fontSize="xs">
-                                {(props.task as any).owner?.userName}
-                            </Text>
-                        )}
-                    </>
-                )}
-            </Box>
-        </NextLink>
+                    {(props.task as any).owner?.id !== user?.id && (
+                        <Text opacity={0.6} fontSize="xs">
+                            {(props.task as any).owner?.userName}
+                        </Text>
+                    )}
+                </>
+            )}
+        </Box>
     );
 }
 
-function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) {
+function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean; onClick?: (task: Task) => void }) {
+    const user = useContext(UserContext);
     let startOfWeek = props.weekDay ? new Date(props.weekDay) : new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     startOfWeek.setSeconds(0);
     startOfWeek.setMinutes(0);
     startOfWeek.setHours(0);
+
+    console.log(props.tasks, user?.id);
 
     return (
         <Grid templateColumns="repeat(7, auto)" overflow="auto" gap={4} my={4}>
@@ -203,7 +217,14 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
                                         <Box key={hour} borderBottom="1px solid" borderColor="gray.100" h={PIXELS_PER_HOUR + "px"}></Box>
                                     ))}
                                     {perGpu[gpuIndex]?.map((task: Task) => (
-                                        <SchedulerTask dayStart={dayStart} dayEnd={dayEnd} color={GPU_COLORS[gpuIndex]} task={task} key={task.id} />
+                                        <SchedulerTask
+                                            onClick={props.onClick}
+                                            dayStart={dayStart}
+                                            dayEnd={dayEnd}
+                                            color={(task as any).owner.id === user?.id ? "green.500" : "blue.500"}
+                                            task={task}
+                                            key={task.id}
+                                        />
                                     ))}
                                     {isToday && <SchedulerNowIndicator />}
                                 </Box>
@@ -326,6 +347,8 @@ export default function App() {
     const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const [selectedTask, setSelectedTask] = useState<Task>();
+    const { isOpen: drawerIsOpen, onOpen: drawerOnOpen, onClose: drawerOnClose } = useDisclosure();
 
     useEffect(() => {
         if (!isValidating && !user) {
@@ -396,7 +419,15 @@ export default function App() {
                         Reserveren
                     </Button>
                 </HStack>
-                <Scheduler weekDay={startDay} tasks={tasks || []} loading={!tasks} />
+                <Scheduler
+                    onClick={(task) => {
+                        setSelectedTask(task);
+                        drawerOnOpen();
+                    }}
+                    weekDay={startDay}
+                    tasks={tasks || []}
+                    loading={!tasks}
+                />
             </Container>
 
             <Modal isOpen={isOpen} onClose={onClose}>
@@ -414,6 +445,24 @@ export default function App() {
                     </ModalBody>
                 </ModalContent>
             </Modal>
+
+            <Drawer size="xl" isOpen={drawerIsOpen} placement="right" onClose={drawerOnClose}>
+                <DrawerOverlay />
+                <DrawerContent>
+                    <DrawerCloseButton />
+                    <DrawerHeader>Task</DrawerHeader>
+
+                    <DrawerBody>
+                        <Code as="pre">{JSON.stringify(selectedTask, null, 2)}</Code>
+                    </DrawerBody>
+
+                    <DrawerFooter>
+                        <Button colorScheme="blue" mr={3} onClick={drawerOnClose}>
+                            Close
+                        </Button>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
         </Box>
     );
 }
