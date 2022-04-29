@@ -347,7 +347,7 @@ export default function App() {
     const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const [selectedTask, setSelectedTask] = useState();
+    const [selectedTask, setSelectedTask] = useState<Task>();
     const { isOpen: drawerIsOpen, onOpen: drawerOnOpen, onClose: drawerOnClose } = useDisclosure();
 
     useEffect(() => {
