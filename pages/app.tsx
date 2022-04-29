@@ -47,7 +47,16 @@ import {
     Switch,
 } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowLeft, faArrowRight, faCalendar, faCalendarAlt, faExternalLink, faRotateLeft, faVial } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowLeft,
+    faArrowRight,
+    faCalendar,
+    faCalendarAlt,
+    faChevronLeft,
+    faExternalLink,
+    faRotateLeft,
+    faVial,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
@@ -129,11 +138,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
                             {busy && <Spinner size="xs" />} {props.task.name}
                         </Text>
 
-                        {(props.task as any).owner?.id === user?.id ? (
-                            <Badge colorScheme="gray" mt={0.5}>
-                                Jouw taak
-                            </Badge>
-                        ) : (
+                        {(props.task as any).owner?.id !== user?.id && (
                             <Text opacity={0.6} fontSize="xs">
                                 {(props.task as any).owner?.userName}
                             </Text>
@@ -146,11 +151,14 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
 }
 
 function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) {
+    const user = useContext(UserContext);
     let startOfWeek = props.weekDay ? new Date(props.weekDay) : new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     startOfWeek.setSeconds(0);
     startOfWeek.setMinutes(0);
     startOfWeek.setHours(0);
+
+    console.log(props.tasks, user?.id);
 
     return (
         <Grid templateColumns="repeat(7, auto)" overflow="auto" gap={4} my={4}>
@@ -203,7 +211,13 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean }) 
                                         <Box key={hour} borderBottom="1px solid" borderColor="gray.100" h={PIXELS_PER_HOUR + "px"}></Box>
                                     ))}
                                     {perGpu[gpuIndex]?.map((task: Task) => (
-                                        <SchedulerTask dayStart={dayStart} dayEnd={dayEnd} color={GPU_COLORS[gpuIndex]} task={task} key={task.id} />
+                                        <SchedulerTask
+                                            dayStart={dayStart}
+                                            dayEnd={dayEnd}
+                                            color={(task as any).owner.id === user?.id ? "green.500" : "blue.500"}
+                                            task={task}
+                                            key={task.id}
+                                        />
                                     ))}
                                     {isToday && <SchedulerNowIndicator />}
                                 </Box>
