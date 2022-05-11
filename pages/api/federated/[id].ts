@@ -77,6 +77,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         if (federated.containerId) {
             let container = docker.getContainer(federated.containerId);
+            let inspectContainer = await container.inspect();
+
+            if (inspectContainer.State.Running) {
+                await container.stop();
+            }
+
             container
                 .remove()
                 .then(() => {
