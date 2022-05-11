@@ -91,11 +91,11 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
             </Heading>
             <Text opacity={0.5}>(geen beschrijving)</Text>
             <Text opacity={1} mt={4}>
-                Container met id <Code>{runtime.federated.containerId || "(geen)"}</Code>
+                Container id: <Code>{runtime.federated.containerId || "(geen)"}</Code>
             </Text>
             {runtime.federated.port && (
                 <Text mt={1}>
-                    Adres en poort is <Code>{location.hostname + ":" + runtime.federated.port}</Code>
+                    Adres en poort: <Code>{location.hostname + ":" + runtime.federated.port}</Code>
                 </Text>
             )}
 

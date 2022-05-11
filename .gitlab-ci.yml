@@ -1,7 +1,7 @@
 stages:
 - test
-- scan
 - build
+- scan
 main-project:
   stage: build
   trigger:
@@ -15,6 +15,7 @@ compile-and-run-junitest:
   tags:
     - "docker"
   script:
+    - 'npm i -D jest-sonar-reporter'
     - 'npm install'
     - 'npm run build'
     - 'npm install pm2 -g'
@@ -34,6 +35,14 @@ sonarqube-check:
     paths:
       - .sonar/cache
   script: 
+    - 'npm i -D jest-sonar-reporter'
+    - 'npm install'
+    - 'npm run build'
+    - 'npm install pm2 -g'
+    - 'pm2 --name gpuserver start npm -- start'
+    - 'npm run test'
     - sonar-scanner
   allow_failure: true # or the name of your main branch
+  tags:
+    - sonar
     
