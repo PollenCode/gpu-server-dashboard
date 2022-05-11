@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser } from "../../../auth";
 import { prisma } from "../../../db";
+import { docker } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let user = await getSessionUser(req, res);
@@ -34,7 +35,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     if (req.method === "GET") {
-        return res.json(federated);
+        let inspectContainer = null;
+        if (federated.containerId) {
+            let container = docker.getContainer(federated.containerId);
+            inspectContainer = await container.inspect();
+        }
+
+        return res.json({ federated, container: inspectContainer });
     } else if (req.method === "PUT") {
         let newName = req.body.newName;
         if (typeof newName !== "string" || !/^[a-zA-Z0-9_ -]{1,30}$/.test(newName)) {
@@ -67,6 +74,27 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 id: id,
             },
         });
+
+        return res.end();
+    } else if (req.method === "POST") {
+        let wantedRunning = req.body.running === true;
+
+        if (!federated.containerId) {
+            return res.status(400).end();
+        }
+
+        let container = docker.getContainer(federated.containerId);
+        let inspectContainer = await container.inspect();
+
+        if (wantedRunning) {
+            if (!inspectContainer.State.Running) {
+                await container.start();
+            }
+        } else {
+            if (inspectContainer.State.Running) {
+                await container.stop();
+            }
+        }
 
         return res.end();
     } else {
