@@ -24,3 +24,34 @@ Run the following commands to update your local database:
 
 -   `npx prisma migrate dev`
 -   `npx prisma generate`
+
+## Dockerfile tensorflow/federated
+
+This repo uses the [tensorflow/federated](https://github.com/tensorflow/federated) repository and its Dockerfile. The build version of this Dockerfile is not officially stored in docker hub. Because of this a custom built version of the Dockerfile is located [here](https://hub.docker.com/r/codestix/federated).
+
+```
+docker pull codestix/federated
+```
+
+### Build and publish new version
+
+1. Create a new repository or use existing repository on [hub.docker.com](https://hub.docker.com).
+2. Login using the `docker login` command.
+3. Clone the tensorflow/federated git repository ...
+
+    ```
+    git clone https://github.com/tensorflow/federated
+    cd federated
+    ```
+
+4. Build the image using ... (make sure to replace versions and tag)
+
+    ```
+    docker build --build-arg VERSION="0.23.0" --network=host  --file "tensorflow_federated/tools/runtime/container/release.Dockerfile" -t codestix/federated:0.23.0 .
+    ```
+
+5. Push the built image to Docker Hub ... (make sure to replace tag and version)
+
+    ```
+    docker push codestix/federated:0.23.0
+    ```
