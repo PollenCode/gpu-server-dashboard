@@ -2,7 +2,7 @@ import { FederatedRuntime } from ".prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
-import { createFederatedContainer, docker } from "../../../docker";
+import { createFederatedContainer, docker, getRandomPort } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let user = await getSessionUser(req, res);
@@ -13,6 +13,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     if (req.method === "POST") {
+        let port = getRandomPort();
+
         let federated = await prisma.federatedRuntime.create({
             data: {
                 name: req.body.name,
@@ -21,10 +23,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                         id: user.id,
                     },
                 },
+                port: port,
             },
         });
 
-        createFederatedContainer()
+        createFederatedContainer(port)
             .then(async (container) => {
                 let updatedFederated = await prisma.federatedRuntime.update({
                     where: {

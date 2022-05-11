@@ -69,25 +69,23 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(403).end();
         }
 
-        if (!federated.containerId) {
-            return res.status(400).end();
-        }
-
         await prisma.federatedRuntime.delete({
             where: {
                 id: id,
             },
         });
 
-        let container = docker.getContainer(federated.containerId);
-        container
-            .remove()
-            .then(() => {
-                console.log("Docker container with id %s removed", federated?.containerId);
-            })
-            .catch((ex) => {
-                console.error("Could not remove docker container with id %s:", federated?.containerId, ex);
-            });
+        if (federated.containerId) {
+            let container = docker.getContainer(federated.containerId);
+            container
+                .remove()
+                .then(() => {
+                    console.log("Docker container with id %s removed", federated?.containerId);
+                })
+                .catch((ex) => {
+                    console.error("Could not remove docker container with id %s:", federated?.containerId, ex);
+                });
+        }
 
         return res.end();
     } else if (req.method === "POST") {

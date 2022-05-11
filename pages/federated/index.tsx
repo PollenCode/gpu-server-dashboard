@@ -41,7 +41,7 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
                 role: number;
             } | null;
         };
-        container: any;
+        container?: any;
     }>("/api/federated/" + props.runtimeId, fetcher, {
         refreshInterval: 1000,
     });
@@ -91,7 +91,7 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
             </Heading>
             <Text opacity={0.5}>(geen beschrijving)</Text>
             <Text opacity={1} mt={4}>
-                Container met id <Code>{runtime.federated.containerId}</Code>
+                Container met id <Code>{runtime.federated.containerId || "(geen)"}</Code>
             </Text>
 
             <Box my={4}>
@@ -99,7 +99,7 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
                     <Button
                         isLoading={loading === "start"}
                         onClick={() => setRuntime(true)}
-                        isDisabled={runtime.container.State.Running || loading !== undefined}
+                        isDisabled={!runtime.container || runtime.container.State.Running || loading !== undefined}
                         colorScheme="green"
                         leftIcon={<FontAwesomeIcon icon={faPlay as IconProp} />}>
                         Start container
@@ -107,7 +107,7 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
                     <Button
                         isLoading={loading === "stop"}
                         onClick={() => setRuntime(false)}
-                        isDisabled={!runtime.container.State.Running || loading !== undefined}
+                        isDisabled={!runtime.container || !runtime.container.State.Running || loading !== undefined}
                         colorScheme="red"
                         leftIcon={<FontAwesomeIcon icon={faStop as IconProp} />}>
                         Stop container
@@ -205,10 +205,15 @@ function FederatedRuntimeCard(props: { runtime: FederatedRuntime & { running?: b
                         {props.runtime.running ? "loopt" : "gestopt"}
                     </Badge>
                 </Heading>
+                {props.runtime.port && (
+                    <Text>
+                        Adres en poort: <Code>{location.hostname + ":" + props.runtime.port}</Code>
+                    </Text>
+                )}
                 <Text opacity={0.5}>(geen beschrijving)</Text>
             </Box>
             <Spacer />
-            <Button onClick={props.onClick} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
+            <Button colorScheme="blue" onClick={props.onClick} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                 Bekijk
             </Button>
         </HStack>
