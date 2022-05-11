@@ -1,3 +1,4 @@
+import { FederatedRuntime } from ".prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
@@ -41,7 +42,19 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         return res.json(federated);
     } else if (req.method === "GET") {
-        let federated = await prisma.federatedRuntime.findMany({});
+        let federated = (await prisma.federatedRuntime.findMany()) as (FederatedRuntime & { running: boolean })[];
+
+        for (let i = 0; i < federated.length; i++) {
+            let f = federated[i];
+            if (f.containerId) {
+                let container = docker.getContainer(f.containerId);
+                let inspected = await container.inspect();
+                f.running = inspected.State.Running;
+            } else {
+                f.running = false;
+            }
+        }
+
         return res.json(federated);
     } else {
         return res.status(405).end();
