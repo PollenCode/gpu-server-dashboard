@@ -249,7 +249,7 @@ export default function FederatedPage() {
                     <Spacer />
 
                     <Button colorScheme="green" leftIcon={<FontAwesomeIcon icon={faPlus as IconProp} />} onClick={onOpenNew}>
-                        New runtime
+                        Nieuwe Runtime
                     </Button>
                 </HStack>
 

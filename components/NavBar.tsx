@@ -1,12 +1,13 @@
-import { Box, Container, Flex, Heading, Spacer, Link } from "@chakra-ui/layout";
+import { Box, Container, Flex, Heading, Spacer } from "@chakra-ui/layout";
 import { Button, ButtonGroup } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faCalendarAlt, faCircleNodes, faNetworkWired, faSignOut } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import useSWR from "swr";
 import { fetcher, SERVER_URL } from "../util";
+import Link from "next/link";
 
 export function NavBar() {
     const { data: user } = useSWR(SERVER_URL + "/api/user", fetcher);
@@ -24,16 +25,19 @@ export function NavBar() {
                     <Spacer />
                     {user ? (
                         <ButtonGroup>
-                            <Link href="/api/logout">
-                                <Button>Logout</Button>
+                            <Link href={"/app"}>
+                                <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt as IconProp} />}>
+                                    Kalender
+                                </Button>
                             </Link>
-                            {!router.asPath.startsWith("/app") && (
-                                <Link href={"/app"}>
-                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
-                                        To app
-                                    </Button>
-                                </Link>
-                            )}
+                            <Link href="/federated">
+                                <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}>
+                                    Federated Runtimes
+                                </Button>
+                            </Link>
+                            <Link href="/api/logout">
+                                <Button rightIcon={<FontAwesomeIcon icon={faSignOut as IconProp} />}>Logout</Button>
+                            </Link>
                         </ButtonGroup>
                     ) : (
                         <Link href={SERVER_URL + "/api/oauth"}>
