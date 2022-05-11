@@ -11,11 +11,12 @@ datasource db {
 }
 
 model User {
-    id       Int    @id @default(autoincrement())
-    userName String
-    email    String @unique
-    role     Int    @default(0)
-    tasks    Task[]
+    id                Int                @id @default(autoincrement())
+    userName          String
+    email             String             @unique
+    role              Int                @default(0)
+    tasks             Task[]
+    federatedRuntimes FederatedRuntime[]
 }
 
 model Task {
@@ -30,4 +31,13 @@ model Task {
 
     owner   User @relation(fields: [ownerId], references: [id])
     ownerId Int
+}
+
+model FederatedRuntime {
+    id          Int     @id @default(autoincrement())
+    name        String
+    containerId String?
+    port        Int?
+    author      User?   @relation(fields: [authorId], references: [id])
+    authorId    Int?
 }
