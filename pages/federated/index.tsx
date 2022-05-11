@@ -93,6 +93,11 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
             <Text opacity={1} mt={4}>
                 Container met id <Code>{runtime.federated.containerId || "(geen)"}</Code>
             </Text>
+            {runtime.federated.port && (
+                <Text mt={1}>
+                    Adres en poort is <Code>{location.hostname + ":" + runtime.federated.port}</Code>
+                </Text>
+            )}
 
             <Box my={4}>
                 <ButtonGroup isAttached>
