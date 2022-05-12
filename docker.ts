@@ -40,7 +40,8 @@ export async function createJupyterContainer(port: number, version: string = "la
     return await docker.createContainer({
         Image: JUPYTER_DOCKER_HUB_REPOSITORY + ":" + version,
         Labels: {
-            Type: "jupyter", // Contains user-defined labels
+            Type: "task", // Contains user-defined labels
+            TaskType: "jupyter",
         },
         HostConfig: {
             PortBindings: {
@@ -53,4 +54,12 @@ export async function createJupyterContainer(port: number, version: string = "la
             },
         },
     });
+}
+
+export async function removeContainer(container: Docker.Container) {
+    let inspectContainer = await container.inspect();
+    if (inspectContainer.State.Running) {
+        await container.stop();
+    }
+    await container.remove();
 }

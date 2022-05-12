@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser } from "../../../auth";
 import { prisma } from "../../../db";
-import { docker } from "../../../docker";
+import { docker, removeContainer } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let user = await getSessionUser(req, res);
@@ -77,14 +77,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         if (federated.containerId) {
             let container = docker.getContainer(federated.containerId);
-            let inspectContainer = await container.inspect();
-
-            if (inspectContainer.State.Running) {
-                await container.stop();
-            }
-
-            container
-                .remove()
+            removeContainer(container)
                 .then(() => {
                     console.log("Docker container with id %s removed", federated?.containerId);
                 })

@@ -2,7 +2,7 @@ import { Task } from ".prisma/client";
 import next, { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
-import { createJupyterContainer, docker, getRandomPort } from "../../../docker";
+import { createJupyterContainer, docker, getRandomPort, removeContainer } from "../../../docker";
 import { GPU_COUNT, IS_DEV } from "../../../util";
 
 function findScheduleSpot(tasks: Task[], trainMilliseconds: number, allGpus: boolean): Date {
@@ -182,12 +182,22 @@ async function refreshCurrentTasks() {
 
         for (let i = 0; i < containers.length; i++) {
             let containerInfo = containers[i];
+            let container = docker.getContainer(containerInfo.Id);
             let task = containerTasks.find((e) => e.containerId === containerInfo.Id);
             if (!task || !task.startDate || !task.endDate) {
+                if (containerInfo.Labels["Type"] === "task") {
+                    // Delete container because its task does not exist anymore in the database
+                    removeContainer(container)
+                        .then(() => {
+                            console.log("Removed container with id %s because it wasn't connected to a task anymore", container.id);
+                        })
+                        .catch((ex) => {
+                            console.log("Could not remove container with id %s (it wasn't connected to a task anymore):", container.id, ex);
+                        });
+                }
                 continue;
             }
 
-            let container = docker.getContainer(containerInfo.Id);
             let shouldBeRunning = task.startDate.getTime() <= now.getTime() && task.endDate.getTime() > now.getTime();
             if (shouldBeRunning) {
                 if (containerInfo.State !== "running") {
