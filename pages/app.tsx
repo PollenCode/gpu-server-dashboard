@@ -450,7 +450,17 @@ export default function App() {
                 <DrawerOverlay />
                 <DrawerContent>
                     <DrawerCloseButton />
-                    <DrawerBody>{selectedTask && <TaskDetails taskId={selectedTask.id} />}</DrawerBody>
+                    <DrawerBody>
+                        {selectedTask && (
+                            <TaskDetails
+                                onClose={() => {
+                                    drawerOnClose();
+                                    mutate();
+                                }}
+                                taskId={selectedTask.id}
+                            />
+                        )}
+                    </DrawerBody>
                 </DrawerContent>
             </Drawer>
         </Box>

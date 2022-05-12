@@ -12,10 +12,20 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useRouter } from "next/router";
 import { UserContext } from "../UserContext";
 
-export function TaskDetails(props: { taskId: number }) {
+export function TaskDetails(props: { taskId: number; onClose: () => void }) {
     const { data: task } = useSWR<Task & { owner?: User }>("/api/task/" + props.taskId, fetcher, { refreshInterval: 10000 });
     const user = useContext(UserContext);
     const router = useRouter();
+
+    async function deleteTask() {
+        let res = await fetch("/api/task/" + props.taskId, {
+            method: "DELETE",
+        });
+
+        if (res.ok) {
+            props.onClose();
+        }
+    }
 
     if (!task) {
         return <Spinner />;
@@ -88,7 +98,13 @@ export function TaskDetails(props: { taskId: number }) {
                         </Text>
                         .
                     </Text>
-                    <ButtonGroup mt={4}>{hasAccess && <Button colorScheme="red">Taak annuleren</Button>}</ButtonGroup>
+                    <ButtonGroup mt={4}>
+                        {hasAccess && (
+                            <Button onClick={deleteTask} leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />} colorScheme="red">
+                                Taak annuleren
+                            </Button>
+                        )}
+                    </ButtonGroup>
                 </Box>
             )}
 
@@ -120,7 +136,7 @@ export function TaskDetails(props: { taskId: number }) {
                     )}
                     {hasAccess && (
                         <ButtonGroup mt={4}>
-                            <Button colorScheme="red" leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />}>
+                            <Button onClick={deleteTask} colorScheme="red" leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />}>
                                 Taak annuleren
                             </Button>
                             <Button isDisabled colorScheme="red" leftIcon={<FontAwesomeIcon icon={faArrowRotateLeft as IconProp} />}>
