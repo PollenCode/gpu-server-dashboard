@@ -36,7 +36,7 @@ model Task {
 model FederatedRuntime {
     id          Int     @id @default(autoincrement())
     name        String
-    containerId String?
+    containerId String? @unique
     port        Int?
     author      User?   @relation(fields: [authorId], references: [id])
     authorId    Int?

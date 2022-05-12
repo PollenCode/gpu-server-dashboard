@@ -105,7 +105,8 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
         // This task will end on another day
         endHour = 24;
     } else {
-        endHour = new Date(props.task.endDate!).getHours();
+        let d = new Date(props.task.endDate!);
+        endHour = d.getHours() + d.getMinutes() / 60;
     }
 
     if (new Date(props.task.startDate!).getTime() < props.dayStart.getTime()) {
@@ -113,7 +114,8 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
         startHour = 0;
         showContents = false; //props.dayStart.getTime() - new Date(props.task.startDate!).getTime() < 1000 * 60 * 60 * FIT_HOURS;
     } else {
-        startHour = new Date(props.task.startDate!).getHours();
+        let d = new Date(props.task.startDate!);
+        startHour = d.getHours() + d.getMinutes() / 60;
         showContents = true; //startHour < 24 - FIT_HOURS;
     }
 
@@ -163,8 +165,6 @@ function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: boolean; on
     startOfWeek.setSeconds(0);
     startOfWeek.setMinutes(0);
     startOfWeek.setHours(0);
-
-    console.log(props.tasks, user?.id);
 
     return (
         <Grid templateColumns="repeat(7, auto)" overflow="auto" gap={4} my={4}>
@@ -389,7 +389,6 @@ export default function App() {
                                         onSubmit={(ev) => {
                                             ev.preventDefault();
                                             let date = new Date(jumpDateString);
-                                            console.log("jump to", date);
                                             setStartDay(date);
                                         }}>
                                         <HStack>
