@@ -4,29 +4,11 @@ import {
     Text,
     Box,
     Container,
-    Alert,
-    AlertIcon,
-    Code,
     Button,
-    Heading,
-    HStack,
-    Center,
     Grid,
     GridItem,
     Flex,
-    ButtonGroup,
     Spacer,
-    Popover,
-    PopoverArrow,
-    PopoverBody,
-    PopoverCloseButton,
-    PopoverContent,
-    PopoverHeader,
-    PopoverTrigger,
-    Portal,
-    FormControl,
-    Input,
-    Spinner,
     Link,
     Badge,
 } from "@chakra-ui/react";
@@ -45,7 +27,6 @@ var endDate: string;
 
 function getInfoFromDB(id: any) {
     //TODO get from db
-    const newid = id;
     taskName = "train_AI";
     const now = new Date();
     start = new Date();
@@ -141,6 +122,4 @@ export default function TaskById() {
             </Container>
         </Box>
     );
-
-    //<p>The task with id {router.query.id} is displayed here</p>;
 }
