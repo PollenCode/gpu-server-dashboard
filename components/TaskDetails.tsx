@@ -1,7 +1,7 @@
-import { Task } from ".prisma/client";
-import { Text, Box, Code, Heading, Badge } from "@chakra-ui/layout";
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Button, ButtonGroup, Spinner } from "@chakra-ui/react";
-import React from "react";
+import { Task, User } from ".prisma/client";
+import { Text, Box, Code, Heading, Badge, HStack, Link as ChakraLink } from "@chakra-ui/layout";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Avatar, Button, ButtonGroup, Spinner } from "@chakra-ui/react";
+import React, { useContext } from "react";
 import useSWR from "swr";
 import { fetcher } from "../util";
 import Link from "next/link";
@@ -10,15 +10,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRotateLeft, faExternalLink, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useRouter } from "next/router";
+import { UserContext } from "../UserContext";
 
 export function TaskDetails(props: { taskId: number }) {
-    const { data: task } = useSWR<Task>("/api/task/" + props.taskId, fetcher, { refreshInterval: 10000 });
+    const { data: task } = useSWR<Task & { owner?: User }>("/api/task/" + props.taskId, fetcher, { refreshInterval: 10000 });
+    const user = useContext(UserContext);
+    const router = useRouter();
 
     if (!task) {
         return <Spinner />;
     }
 
-    const router = useRouter();
+    const hasAccess = task.ownerId === user.id;
     const now = new Date();
     const startDate = new Date(task.startDate!);
     const endDate = new Date(task.endDate!);
@@ -54,6 +57,24 @@ export function TaskDetails(props: { taskId: number }) {
                 </Badge>
             </Heading>
 
+            {!hasAccess && task.owner && (
+                <Box my={4}>
+                    <HStack>
+                        <Text>Door</Text>
+                        <Avatar size="xs" name={task.owner.userName} title={task.owner.email} />
+                        <ChakraLink isExternal href={"mailto:" + task.owner.email}>
+                            <Text fontWeight="semibold">{task.owner.userName}</Text>
+                        </ChakraLink>
+                    </HStack>
+                </Box>
+            )}
+
+            {hasAccess && (
+                <Box my={4} opacity={0.5}>
+                    {task.description || "(geen beschrijving)"}
+                </Box>
+            )}
+
             {status === "waiting" && (
                 <Box>
                     <Text>
@@ -67,42 +88,46 @@ export function TaskDetails(props: { taskId: number }) {
                         </Text>
                         .
                     </Text>
-                    <ButtonGroup mt={4}>
-                        <Button colorScheme="red">Taak annuleren</Button>
-                    </ButtonGroup>
+                    <ButtonGroup mt={4}>{hasAccess && <Button colorScheme="red">Taak annuleren</Button>}</ButtonGroup>
                 </Box>
             )}
 
             {status === "running" && (
                 <Box>
                     <Text>
-                        Deze taak is nu bezig, je hebt nog{" "}
+                        Deze taak is nu bezig, nog{" "}
                         <Text fontWeight="semibold" as="span">
                             {ms(endDate.getTime() - now.getTime())}
                         </Text>{" "}
                         voordat deze taak word beëindigd.
                     </Text>
-                    <Alert mt={4} status="warning" rounded="lg">
-                        <AlertIcon />
-                        Wanneer je taak beëindigd word, word je model niet automatisch opgeslagen. Zorg dat je code hiervoor gepast is.
-                    </Alert>
-                    <Box>
-                        <Link passHref href={`http://${location.hostname}:${task.notebookPort}/?token=${encodeURIComponent(task.notebookToken)}`}>
-                            <a target="_blank">
-                                <Button mt={4} colorScheme="orange" rightIcon={<FontAwesomeIcon icon={faExternalLink as IconProp} />}>
-                                    Naar Jupyter Notebook
-                                </Button>
-                            </a>
-                        </Link>
-                    </Box>
-                    <ButtonGroup mt={4}>
-                        <Button colorScheme="red" leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />}>
-                            Taak annuleren
-                        </Button>
-                        <Button isDisabled colorScheme="red" leftIcon={<FontAwesomeIcon icon={faArrowRotateLeft as IconProp} />}>
-                            Opnieuw opstarten
-                        </Button>
-                    </ButtonGroup>
+                    {hasAccess && (
+                        <Alert mt={4} status="warning" rounded="lg">
+                            <AlertIcon />
+                            Wanneer je taak beëindigd word, word je model niet automatisch opgeslagen. Zorg dat je code hiervoor gepast is.
+                        </Alert>
+                    )}
+                    {task.notebookPort && task.notebookToken && (
+                        <Box>
+                            <Link passHref href={`http://${location.hostname}:${task.notebookPort}/?token=${encodeURIComponent(task.notebookToken)}`}>
+                                <a target="_blank">
+                                    <Button mt={4} colorScheme="orange" rightIcon={<FontAwesomeIcon icon={faExternalLink as IconProp} />}>
+                                        Naar Jupyter Notebook
+                                    </Button>
+                                </a>
+                            </Link>
+                        </Box>
+                    )}
+                    {hasAccess && (
+                        <ButtonGroup mt={4}>
+                            <Button colorScheme="red" leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />}>
+                                Taak annuleren
+                            </Button>
+                            <Button isDisabled colorScheme="red" leftIcon={<FontAwesomeIcon icon={faArrowRotateLeft as IconProp} />}>
+                                Opnieuw opstarten
+                            </Button>
+                        </ButtonGroup>
+                    )}
                 </Box>
             )}
 
@@ -116,9 +141,11 @@ export function TaskDetails(props: { taskId: number }) {
                         .
                     </Text>
 
-                    <ButtonGroup mt={4}>
-                        <Button colorScheme="green">Taak opnieuw inplannen</Button>
-                    </ButtonGroup>
+                    {hasAccess && (
+                        <ButtonGroup mt={4}>
+                            <Button colorScheme="green">Taak opnieuw inplannen</Button>
+                        </ButtonGroup>
+                    )}
                 </Box>
             )}
 
