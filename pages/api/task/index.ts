@@ -4,6 +4,7 @@ import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
 import { createJupyterContainer, docker, getRandomPort, removeContainer } from "../../../docker";
 import { GPU_COUNT, IS_DEV } from "../../../util";
+import crypto from "crypto";
 
 function findScheduleSpot(tasks: Task[], trainMilliseconds: number, allGpus: boolean): Date {
     if (tasks.length <= 0) {
@@ -133,10 +134,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             }
         }
 
-        let containerPort = getRandomPort();
+        let notebookToken = crypto.randomBytes(64).toString("hex");
+        let notebookPort = getRandomPort();
         let container;
         try {
-            container = await createJupyterContainer(containerPort);
+            container = await createJupyterContainer(notebookPort, notebookToken);
         } catch (ex) {
             console.error("Could not create Docker container for new task:", ex);
             return res.status(400).json({
@@ -157,6 +159,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 endDate: new Date(scheduleDate.getTime() + trainMilliseconds),
                 description: data.description,
                 gpus: scheduleGpus,
+                notebookToken: notebookToken,
+                notebookPort: notebookPort,
             },
         });
 

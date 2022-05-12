@@ -33,12 +33,18 @@ export async function createFederatedContainer(port: number, gpus: number[] = []
     });
 }
 
-export async function createJupyterContainer(port: number, version: string = "latest-gpu-jupyter") {
+export async function createJupyterContainer(port: number, token: string, version: string = "latest-gpu-jupyter") {
     const INTERNAL_PORT = 8888;
 
     // TODO: pass GPUs
     return await docker.createContainer({
         Image: JUPYTER_DOCKER_HUB_REPOSITORY + ":" + version,
+        // This command is the entrypoint command in the tensorflow/tensorflow image and it sets the notebook token according to https://stackoverflow.com/questions/47092878/auto-configure-jupyter-password-from-command-line
+        Cmd: [
+            "bash",
+            "-c",
+            `source /etc/bash.bashrc && jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.token='${token}'`,
+        ],
         Labels: {
             Type: "task", // Contains user-defined labels
             TaskType: "jupyter",

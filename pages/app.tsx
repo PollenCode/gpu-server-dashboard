@@ -70,6 +70,7 @@ import { useRouter } from "next/router";
 import React, { useContext, useEffect, useState } from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
+import { TaskDetails } from "../components/TaskDetails";
 import { UserContext } from "../UserContext";
 import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
 
@@ -449,17 +450,7 @@ export default function App() {
                 <DrawerOverlay />
                 <DrawerContent>
                     <DrawerCloseButton />
-                    <DrawerHeader>Task</DrawerHeader>
-
-                    <DrawerBody>
-                        <Code as="pre">{JSON.stringify(selectedTask, null, 2)}</Code>
-                    </DrawerBody>
-
-                    <DrawerFooter>
-                        <Button colorScheme="blue" mr={3} onClick={drawerOnClose}>
-                            Close
-                        </Button>
-                    </DrawerFooter>
+                    <DrawerBody>{selectedTask && <TaskDetails taskId={selectedTask.id} />}</DrawerBody>
                 </DrawerContent>
             </Drawer>
         </Box>

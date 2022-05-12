@@ -20,14 +20,16 @@ model User {
 }
 
 model Task {
-    id          Int       @id @default(autoincrement())
-    name        String
-    description String?
-    containerId String?
-    gpus        Int[]
-    startDate   DateTime?
-    endDate     DateTime?
-    scriptPath  String?
+    id            Int       @id @default(autoincrement())
+    name          String
+    description   String?
+    containerId   String?
+    gpus          Int[]
+    startDate     DateTime?
+    endDate       DateTime?
+    scriptPath    String?
+    notebookPort  Int?
+    notebookToken String?
 
     owner   User @relation(fields: [ownerId], references: [id])
     ownerId Int
