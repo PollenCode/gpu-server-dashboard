@@ -1,7 +1,21 @@
 import { Task, User } from ".prisma/client";
 import { Text, Box, Code, Heading, Badge, HStack, Link as ChakraLink } from "@chakra-ui/layout";
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Avatar, Button, ButtonGroup, Spinner } from "@chakra-ui/react";
-import React, { useContext } from "react";
+import {
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
+    Avatar,
+    Button,
+    ButtonGroup,
+    Spinner,
+} from "@chakra-ui/react";
+import React, { useContext, useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "../util";
 import Link from "next/link";
@@ -12,10 +26,23 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useRouter } from "next/router";
 import { UserContext } from "../UserContext";
 
+export function TaskLogs(props: { taskId: number }) {
+    return <Box>these are thee lgos</Box>;
+}
+
 export function TaskDetails(props: { taskId: number; onClose: () => void }) {
     const { data: task } = useSWR<Task & { owner?: User }>("/api/task/" + props.taskId, fetcher, { refreshInterval: 10000 });
     const user = useContext(UserContext);
     const router = useRouter();
+    const [logs, setLogs] = useState<string>();
+
+    async function fetchLogs() {
+        let res = await fetch("/api/task/logs/" + props.taskId);
+        if (res.ok) {
+            let l = await res.text();
+            setLogs(l.trim());
+        }
+    }
 
     async function deleteTask() {
         let res = await fetch("/api/task/" + props.taskId, {
@@ -120,7 +147,7 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
                     {hasAccess && (
                         <Alert mt={4} status="warning" rounded="lg">
                             <AlertIcon />
-                            Wanneer je taak beëindigd word, word je model niet automatisch opgeslagen. Zorg dat je code hiervoor gepast is.
+                            Wanneer je taak beëindigd word, word je model niet automatisch opgeslagen. Zorg dat je code hiervoor aangepast is.
                         </Alert>
                     )}
                     {task.notebookPort && task.notebookToken && (
@@ -159,15 +186,33 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
 
                     {hasAccess && (
                         <ButtonGroup mt={4}>
-                            <Button colorScheme="green">Taak opnieuw inplannen</Button>
+                            <Button isDisabled colorScheme="green">
+                                Taak opnieuw inplannen
+                            </Button>
                         </ButtonGroup>
                     )}
                 </Box>
             )}
 
-            <Code mt={4} as="pre">
+            {hasAccess && status !== "waiting" && (
+                <Accordion allowToggle my={4}>
+                    <AccordionItem>
+                        <h2>
+                            <AccordionButton onClick={() => fetchLogs()}>
+                                <Box flex="1" textAlign="left">
+                                    Toon logboek
+                                </Box>
+                                <AccordionIcon />
+                            </AccordionButton>
+                        </h2>
+                        <AccordionPanel pb={4}>{logs ? <Code as="pre">{logs}</Code> : <Text>(geen)</Text>}</AccordionPanel>
+                    </AccordionItem>
+                </Accordion>
+            )}
+
+            {/* <Code mt={4} as="pre">
                 {JSON.stringify(task, null, 2)}
-            </Code>
+            </Code> */}
         </Box>
     );
 }
