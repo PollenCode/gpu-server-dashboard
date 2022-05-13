@@ -112,6 +112,8 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
                 </Box>
             )}
 
+            <Box my={4}>Op GPU {task.gpus.join(" en ")}.</Box>
+
             {status === "waiting" && (
                 <Box>
                     <Text>
