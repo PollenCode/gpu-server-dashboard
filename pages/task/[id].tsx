@@ -15,33 +15,11 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { fetcher, GPU_COUNT, SERVER_URL } from "../../util";
+import { useEffect } from "react";
+import useSWR from "swr";
 
-var taskName: string;
-var start: Date;
-var end: Date;
-var status: string = "wachtend";
-var statusColor: string = "yellow";
-var gpu;
-var startDate: string;
-var endDate: string;
 
-function getInfoFromDB(id: any) {
-    //TODO get from db
-    taskName = "train_AI";
-    const now = new Date();
-    start = new Date();
-    end = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 23, 23, 23);
-    if (now > end) {
-        status = "voltooid";
-        statusColor = "red";
-    } else if (now > start) {
-        status = "bezig";
-        statusColor = "green";
-    }
-    gpu = "GPU2";
-    startDate = start.toDateString();
-    endDate = end.toDateString();
-}
 
 function deleteTask() {
     //TODO
@@ -56,8 +34,37 @@ function deleteFolder() {
 }
 
 export default function TaskById() {
+    const now = new Date();
+    var taskName: string;
+    var start: Date;
+    var end: Date;
+    var status: string = "wachtend";
+    var statusColor: string = "yellow";
+    var gpu: string = "both GPUs";
+    var startDate: string;
+    var endDate: string;
     const router = useRouter();
-    getInfoFromDB(router.query.id);
+    const {data:task} = useSWR("/api/task/" + router.query.id,fetcher);
+
+    
+    taskName = task?.name;
+    start = new Date(task?.startDate);
+    end = new Date(task?.endDate);
+    if(task?.gpus.length == 1){
+        gpu = task?.gpus[0];
+    }
+    
+
+    if (now > end) {
+        status = "voltooid";
+        statusColor = "red";
+    } else if (now > start) {
+        status = "bezig";
+        statusColor = "green";
+    }
+
+    startDate = start?.toLocaleString();
+    endDate = end?.toLocaleString();
 
     return (
         <Box bg="gray.100" minH="100vh">
@@ -75,7 +82,7 @@ export default function TaskById() {
                                 <Text>
                                     <b>{taskName}</b> ({router.query.id})
                                     <Badge colorScheme={statusColor} padding={1} marginLeft={7}>
-                                        {status}
+                                        {status} op GPU{gpu}
                                     </Badge>
                                 </Text>
                             </Box>
@@ -112,7 +119,7 @@ export default function TaskById() {
                             <Flex flexDirection="column">
                                 <Text fontWeight="bold">This is output from the docker container.</Text>
                                 <Text h="auto" marginTop="10px" paddingTop="5px" borderTop="1px solid black">
-                                    output output <br /> output
+                                    {JSON.stringify(task,null,2)}
                                 </Text>
                             </Flex>
                         </Box>
