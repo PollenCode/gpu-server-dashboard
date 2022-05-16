@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testExecutions version="1">
+  <file path="/builds/ikdoeict/stijn.rogiest/2122agileteamproject-gpuserver-webapp/test/api.test.ts">
+    <testCase name="Does an api test" duration="491"/>
+  </file>
+  <file path="/builds/ikdoeict/stijn.rogiest/2122agileteamproject-gpuserver-webapp/test/random-port.test.ts">
+    <testCase name="does port test lower" duration="3"/>
+    <testCase name="does port test upper" duration="1"/>
+  </file>
+</testExecutions>
