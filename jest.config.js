@@ -15,7 +15,7 @@ const customJestConfig = {
     testEnvironment: "jest-environment-jsdom",
     collectCoverage: true,
     verbose: true,
-    collectCoverageFrom: ["pages/**/*.{ts,tsx}" ],
+    collectCoverageFrom: ["**/**/*.{ts,tsx}" ],
     testResultsProcessor: "jest-sonar-reporter",
 };
 
