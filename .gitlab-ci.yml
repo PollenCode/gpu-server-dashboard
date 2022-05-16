@@ -40,7 +40,7 @@ sonarqube-check:
     - 'npm run build'
     - 'npm install pm2 -g'
     - 'pm2 --name gpuserver start npm -- start'
-    - 'npm run test'
+    - 'npm run test --coverage'
     - 'sonar-scanner'
   allow_failure: true # or the name of your main branch
   tags:
