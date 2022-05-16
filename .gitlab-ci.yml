@@ -21,7 +21,7 @@ compile-and-run-junitest:
     - 'npm install pm2 -g'
     - 'pm2 --name gpuserver start npm -- start'
     - 'npm run test'
-    - 'jest --coverage'
+    - 'echo $jest --coverage'
 
 sonarqube-check:
   stage: scan
