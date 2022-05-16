@@ -21,7 +21,6 @@ compile-and-run-junitest:
     - 'npm install pm2 -g'
     - 'pm2 --name gpuserver start npm -- start'
     - 'npm run test'
-    - 'echo $jest --coverage'
 
 sonarqube-check:
   stage: scan
@@ -41,7 +40,7 @@ sonarqube-check:
     - 'npm run build'
     - 'npm install pm2 -g'
     - 'pm2 --name gpuserver start npm -- start'
-    - 'npm run test --coverage'
+    - 'npm run test'
     - 'sonar-scanner'
   allow_failure: true # or the name of your main branch
   tags:
