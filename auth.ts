@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { BaseClient, Issuer } from "openid-client";
-import { SERVER_URL } from "./util";
 import jwt from "jsonwebtoken";
 import { prisma } from "./db";
 

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "../../../db";
 import { msOauth, setupOauth } from "../../../auth";
-import { SERVER_URL } from "../../../util";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
 

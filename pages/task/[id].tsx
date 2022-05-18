@@ -1,25 +1,12 @@
 import { useRouter } from "next/router";
 import { NavBar } from "../../components/NavBar";
-import {
-    Text,
-    Box,
-    Container,
-    Button,
-    Grid,
-    GridItem,
-    Flex,
-    Spacer,
-    Link,
-    Badge,
-} from "@chakra-ui/react";
+import { Text, Box, Container, Button, Grid, GridItem, Flex, Spacer, Link, Badge } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { fetcher, GPU_COUNT, SERVER_URL } from "../../util";
+import { fetcher, GPU_COUNT } from "../../util";
 import { useEffect } from "react";
 import useSWR from "swr";
-
-
 
 function deleteTask() {
     //TODO
@@ -44,16 +31,14 @@ export default function TaskById() {
     var startDate: string;
     var endDate: string;
     const router = useRouter();
-    const {data:task} = useSWR("/api/task/" + router.query.id,fetcher);
+    const { data: task } = useSWR("/api/task/" + router.query.id, fetcher);
 
-    
     taskName = task?.name;
     start = new Date(task?.startDate);
     end = new Date(task?.endDate);
-    if(task?.gpus.length == 1){
+    if (task?.gpus.length == 1) {
         gpu = task?.gpus[0];
     }
-    
 
     if (now > end) {
         status = "voltooid";
@@ -119,7 +104,7 @@ export default function TaskById() {
                             <Flex flexDirection="column">
                                 <Text fontWeight="bold">This is output from the docker container.</Text>
                                 <Text h="auto" marginTop="10px" paddingTop="5px" borderTop="1px solid black">
-                                    {JSON.stringify(task,null,2)}
+                                    {JSON.stringify(task, null, 2)}
                                 </Text>
                             </Flex>
                         </Box>

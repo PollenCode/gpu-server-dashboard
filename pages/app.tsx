@@ -72,7 +72,7 @@ import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { TaskDetails } from "../components/TaskDetails";
 import { UserContext } from "../UserContext";
-import { fetcher, GPU_COUNT, SERVER_URL } from "../util";
+import { fetcher, GPU_COUNT } from "../util";
 
 const GPU_COLORS = ["red.500", "green.500", "orange.500", "purple.500"];
 const DAYS_OF_WEEK = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
@@ -252,7 +252,7 @@ function ReserveTaskForm(props: { onClose: () => void }) {
         setLoading(true);
         await new Promise((res) => setTimeout(res, 500));
 
-        let res = await fetch(SERVER_URL + "/api/task", {
+        let res = await fetch("/api/task", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -341,9 +341,9 @@ function ReserveTaskForm(props: { onClose: () => void }) {
 }
 
 export default function App() {
-    const { data: user, isValidating } = useSWR(SERVER_URL + "/api/user", fetcher);
+    const { data: user, isValidating } = useSWR("/api/user", fetcher);
     const router = useRouter();
-    const { data: tasks, mutate } = useSWR<Task[]>(SERVER_URL + "/api/task", fetcher, { refreshInterval: 20000 });
+    const { data: tasks, mutate } = useSWR<Task[]>("/api/task", fetcher, { refreshInterval: 20000 });
     const now = new Date();
     const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);

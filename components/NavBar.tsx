@@ -6,11 +6,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import useSWR from "swr";
-import { fetcher, SERVER_URL } from "../util";
+import { fetcher } from "../util";
 import Link from "next/link";
 
 export function NavBar() {
-    const { data: user } = useSWR(SERVER_URL + "/api/user", fetcher);
+    const { data: user } = useSWR("/api/user", fetcher);
     const router = useRouter();
 
     return (
@@ -40,7 +40,7 @@ export function NavBar() {
                             </Link>
                         </ButtonGroup>
                     ) : (
-                        <Link href={SERVER_URL + "/api/oauth"}>
+                        <Link href={"/api/oauth"}>
                             <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                                 Log in
                             </Button>

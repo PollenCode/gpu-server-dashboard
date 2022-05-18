@@ -5,7 +5,7 @@ import Link from "next/link";
 import React from "react";
 import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
-import { fetcher, SERVER_URL } from "../util";
+import { fetcher } from "../util";
 
 export default function Index() {
     return (
