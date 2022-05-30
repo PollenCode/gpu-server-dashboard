@@ -1,6 +1,7 @@
 import { Role, User } from ".prisma/client";
 import { Box, Container, Heading } from "@chakra-ui/layout";
 import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 import React from "react";
 import { getSessionUser } from "../auth";
 import { NavBar } from "../components/NavBar";
@@ -8,6 +9,7 @@ import { ReserveTaskForm } from "../components/ReserveTaskForm";
 import { getSetting, SETTING_GPU_COUNT, SETTING_MAX_TIME_BEFORE_APPROVAL, SETTING_MULTI_GPU_APPROVAL } from "../db";
 
 export default function ReservePage(props: { user: User; maxTimeBeforeApproval: number; multiGpuApproval: boolean; gpuCount: number }) {
+    const router = useRouter();
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar user={props.user} />
@@ -22,7 +24,7 @@ export default function ReservePage(props: { user: User; maxTimeBeforeApproval: 
                         noApproval={props.user.role !== Role.User}
                         maxTimeBeforeApproval={props.maxTimeBeforeApproval}
                         multiGpuApproval={props.multiGpuApproval}
-                        onDone={() => {}}
+                        onDone={(id) => router.push(id ? "/app?selectedTaskId=" + encodeURIComponent(id) : "/app")}
                     />
                 </Box>
             </Container>

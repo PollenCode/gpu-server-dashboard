@@ -87,6 +87,14 @@ export default function App(props: { user: User }) {
     const [selectedTask, setSelectedTask] = useState<Task>();
     const { isOpen: drawerIsOpen, onOpen: drawerOnOpen, onClose: drawerOnClose } = useDisclosure();
 
+    useEffect(() => {
+        let urlSelectedTaskId = parseInt(String(router.query.selectedTaskId));
+        if (tasks && selectedTask === undefined && !isNaN(urlSelectedTaskId)) {
+            setSelectedTask(tasks.find((e) => e.id === urlSelectedTaskId));
+            drawerOnOpen();
+        }
+    }, [tasks, selectedTask, router.query.selectedTaskId]);
+
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar user={props.user} />

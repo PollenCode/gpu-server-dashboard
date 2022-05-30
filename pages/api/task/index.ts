@@ -67,8 +67,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         let data = req.body;
 
         let allGpus = !!data.allGpus;
+        let name = data.name;
+        let description = data.description;
         let trainMilliseconds = 1000 * 60 * data.trainMinutes;
-        // let { date, gpus } = await findScheduleSpot(trainMilliseconds, allGpus);
 
         let date = new Date(data.date);
         if (isNaN(date.getTime())) {
@@ -126,7 +127,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         let task = await prisma.task.create({
             data: {
-                name: data.name,
+                name: name,
                 owner: {
                     connect: {
                         id: userId,
@@ -135,7 +136,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 containerId: container.id,
                 startDate: date,
                 endDate: new Date(date.getTime() + trainMilliseconds),
-                description: data.description,
+                description: description,
                 gpus: scheduledGpus,
                 notebookToken: notebookToken,
                 notebookPort: notebookPort,

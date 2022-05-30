@@ -40,7 +40,7 @@ import { Task } from ".prisma/client";
 import { isSpotTaken } from "../scheduler";
 
 export function ReserveTaskForm(props: {
-    onDone: () => void;
+    onDone: (id?: number) => void;
     noApproval: boolean;
     maxTimeBeforeApproval: number;
     multiGpuApproval: boolean;
@@ -77,20 +77,22 @@ export function ReserveTaskForm(props: {
             },
             body: JSON.stringify({
                 name: taskName,
-                description: "",
+                description: taskDescription,
                 date: new Date(selectedDate.getTime() + selectedTimeOffset),
                 trainMinutes: hourValue * 60,
                 allGpus: allGpus,
             }),
         });
         if (res.ok) {
-            console.log("New task", await res.json());
+            let data = await res.json();
+            console.log("New task", data);
+
+            props.onDone(data.id);
         } else {
             console.error("Error while creating task", await res.text());
         }
 
         setLoading(undefined);
-        props.onDone();
     }
 
     async function autoSetDate() {
@@ -284,9 +286,9 @@ export function ReserveTaskForm(props: {
                 </FormHelperText>
             </FormControl>
 
-            <FormControl mt={6} isDisabled={loading !== undefined && loading !== "fetchDayTasks"}>
+            <FormControl isRequired mt={6} isDisabled={loading !== undefined && loading !== "fetchDayTasks"}>
                 <FormLabel>Kies datum & tijd</FormLabel>
-                <Button type="button" isLoading={loading === "autoSetDate"} onClick={autoSetDate} mb={4} colorScheme="green">
+                <Button isDisabled={!!loading} type="button" isLoading={loading === "autoSetDate"} onClick={autoSetDate} mb={4} colorScheme="green">
                     Kies automatisch
                 </Button>
                 <Input value={selectedDateString} onChange={(ev) => setSelectedDateString(ev.target.value)} mb={4} type="date"></Input>
@@ -321,10 +323,15 @@ export function ReserveTaskForm(props: {
 
             <HStack mt={6} mb={4}>
                 <Spacer />
-                <Button isLoading={loading === "submit"} isDisabled={!!loading} type="submit" colorScheme="green" mr={3}>
+                <Button
+                    isLoading={loading === "submit"}
+                    isDisabled={!!loading || !selectedDate || selectedTimeOffset === undefined || !taskName}
+                    type="submit"
+                    colorScheme="green"
+                    mr={3}>
                     Aanvragen
                 </Button>
-                <Button isDisabled={!!loading} type="button" variant="ghost" onClick={props.onDone}>
+                <Button isDisabled={!!loading} type="button" variant="ghost" onClick={() => props.onDone()}>
                     Annuleren
                 </Button>
             </HStack>
