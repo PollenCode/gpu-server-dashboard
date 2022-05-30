@@ -1,51 +1,12 @@
 import { Task } from ".prisma/client";
 import next, { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
-import { prisma } from "../../../db";
+import { getSetting, prisma, SETTING_GPU_COUNT } from "../../../db";
 import { createJupyterContainer, docker, getRandomPort, removeContainer } from "../../../docker";
-import { GPU_COUNT, IS_DEV } from "../../../util";
+import { IS_DEV } from "../../../util";
 import crypto from "crypto";
-
-function findScheduleSpot(tasks: Task[], trainMilliseconds: number, allGpus: boolean): Date {
-    if (tasks.length <= 0) {
-        if (IS_DEV) {
-            // Schedule in 5 seconds
-            return new Date(new Date().getTime() + 1000 * 5);
-        } else {
-            // Schedule in 15 minutes
-            let date = new Date(new Date().getTime() + 1000 * 60 * 15);
-            date.setMilliseconds(0);
-            date.setSeconds(0);
-            // Align to next 15 minutes
-            date.setMinutes((Math.floor(date.getMinutes() / 15) + 1) * 15);
-            return date;
-        }
-    } else {
-        // Find a spot between existing tasks
-        for (let i = 0; i < tasks.length - 1; i++) {
-            let now = tasks[i];
-            let next = tasks[i + 1];
-
-            if (now.endDate!.getTime() + trainMilliseconds < next.startDate!.getTime()) {
-                // Found a spot
-                return now.endDate!;
-            }
-        }
-
-        if (allGpus) {
-            let lastEndingDate = tasks[0].endDate!;
-            for (let i = 1; i < tasks.length; i++) {
-                if (tasks[i].endDate!.getTime() > lastEndingDate.getTime()) {
-                    lastEndingDate = tasks[i].endDate!;
-                }
-            }
-            return lastEndingDate;
-        } else {
-            let last = tasks[tasks.length - 1];
-            return last.endDate!;
-        }
-    }
-}
+import { findScheduleSpot } from "../../../db";
+import { isSpotTaken } from "../../../scheduler";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let userId = await getSessionUserId(req, res);
@@ -54,8 +15,25 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     if (req.method === "GET") {
-        let from = new Date();
-        let to = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
+        let from;
+        if (req.query.from) {
+            from = new Date(String(req.query.from));
+            if (isNaN(from.getTime())) {
+                return res.status(406).end();
+            }
+        } else {
+            from = new Date();
+        }
+
+        let to;
+        if (req.query.to) {
+            to = new Date(String(req.query.to));
+            if (isNaN(to.getTime())) {
+                return res.status(406).end();
+            }
+        } else {
+            to = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
+        }
 
         let tasks = await prisma.task.findMany({
             where: {
@@ -90,6 +68,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         let allGpus = !!data.allGpus;
         let trainMilliseconds = 1000 * 60 * data.trainMinutes;
+        // let { date, gpus } = await findScheduleSpot(trainMilliseconds, allGpus);
+
+        let date = new Date(data.date);
+        if (isNaN(date.getTime())) {
+            return res.status(406).end();
+        }
 
         let nextTasks = await prisma.task.findMany({
             where: {
@@ -102,34 +86,30 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             },
         });
 
-        let scheduleDate: Date;
-        let scheduleGpus = [] as number[];
+        let gpuCount = await getSetting<number>(SETTING_GPU_COUNT);
+        let scheduledGpus: number[] = [];
         if (allGpus) {
-            // Find a spot where all the gpus aren't used
-            scheduleDate = findScheduleSpot(nextTasks, trainMilliseconds, true);
-            scheduleGpus = new Array(GPU_COUNT).fill(0).map((_, i) => i);
+            if (!isSpotTaken(nextTasks, trainMilliseconds, date)) {
+                scheduledGpus = new Array(gpuCount).fill(0).map((_, i) => i);
+            }
         } else {
-            // Find a spot on each specific gpu
-            let scheduleDateCandidates = new Array(GPU_COUNT);
-            for (let g = 0; g < GPU_COUNT; g++) {
-                let gpuSpecificScheduleDate = findScheduleSpot(
+            for (let g = 0; g < gpuCount; g++) {
+                let takenOnGpu = isSpotTaken(
                     nextTasks.filter((e) => e.gpus.includes(g)),
                     trainMilliseconds,
-                    false
+                    date
                 );
-                scheduleDateCandidates[g] = gpuSpecificScheduleDate;
-            }
 
-            // Use the earliest available spot
-            scheduleDate = scheduleDateCandidates[0];
-            scheduleGpus = [0];
-            for (let g = 1; g < scheduleDateCandidates.length; g++) {
-                let gpuSpecificScheduleDate = scheduleDateCandidates[g];
-                if (gpuSpecificScheduleDate.getTime() < scheduleDate.getTime()) {
-                    scheduleDate = gpuSpecificScheduleDate;
-                    scheduleGpus = [g];
+                if (!takenOnGpu) {
+                    scheduledGpus = [g];
+                    break;
                 }
             }
+        }
+
+        if (scheduledGpus.length === 0) {
+            console.log("User tried to schedule spot already taken");
+            return res.status(400).end();
         }
 
         let notebookToken = crypto.randomBytes(64).toString("hex");
@@ -153,10 +133,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                     },
                 },
                 containerId: container.id,
-                startDate: scheduleDate,
-                endDate: new Date(scheduleDate.getTime() + trainMilliseconds),
+                startDate: date,
+                endDate: new Date(date.getTime() + trainMilliseconds),
                 description: data.description,
-                gpus: scheduleGpus,
+                gpus: scheduledGpus,
                 notebookToken: notebookToken,
                 notebookPort: notebookPort,
             },

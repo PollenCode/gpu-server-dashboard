@@ -4,7 +4,7 @@ import { Text, Box, Container, Button, Grid, GridItem, Flex, Spacer, Link, Badge
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { fetcher, GPU_COUNT } from "../../util";
+import { fetcher } from "../../util";
 import { useEffect } from "react";
 import useSWR from "swr";
 

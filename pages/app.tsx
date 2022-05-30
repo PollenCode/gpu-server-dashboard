@@ -72,7 +72,7 @@ import useSWR from "swr";
 import { NavBar } from "../components/NavBar";
 import { TaskDetails } from "../components/TaskDetails";
 import { UserContext } from "../UserContext";
-import { fetcher, GPU_COUNT } from "../util";
+import { fetcher } from "../util";
 import { ReserveTaskForm } from "../components/ReserveTaskForm";
 import { Scheduler } from "../components/Scheduler";
 import { GetServerSideProps } from "next";
@@ -84,7 +84,6 @@ export default function App(props: { user: User }) {
     const now = new Date();
     const [jumpDateString, setJumpDateString] = useState("");
     const [startDay, setStartDay] = useState(now);
-    const { isOpen, onOpen, onClose } = useDisclosure();
     const [selectedTask, setSelectedTask] = useState<Task>();
     const { isOpen: drawerIsOpen, onOpen: drawerOnOpen, onClose: drawerOnClose } = useDisclosure();
 
@@ -150,9 +149,11 @@ export default function App(props: { user: User }) {
                     </Button>
                     {!tasks && <Spinner />}
                     <Spacer />
-                    <Button colorScheme="green" onClick={onOpen} rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
-                        Reserveren
-                    </Button>
+                    <NextLink href="/reserve">
+                        <Button colorScheme="green" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
+                            Reserveren
+                        </Button>
+                    </NextLink>
                 </HStack>
                 <Scheduler
                     onClick={(task) => {
@@ -164,22 +165,6 @@ export default function App(props: { user: User }) {
                     loading={!tasks}
                 />
             </Container>
-
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Taak Reserveren</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <ReserveTaskForm
-                            onClose={() => {
-                                mutate();
-                                onClose();
-                            }}
-                        />
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
 
             <Drawer size="xl" isOpen={drawerIsOpen} placement="right" onClose={drawerOnClose}>
                 <DrawerOverlay />
