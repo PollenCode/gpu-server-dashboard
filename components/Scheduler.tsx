@@ -28,9 +28,6 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     const user = useContext(UserContext);
     let startHour, endHour, showContents;
 
-    // Only show the information about this task in a UI spot that can fit x hours
-    const FIT_HOURS = 2;
-
     if (new Date(props.task.endDate!).getTime() >= props.dayEnd.getTime()) {
         // This task will end on another day
         endHour = 24;
@@ -48,7 +45,6 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
         startHour = d.getHours() + d.getMinutes() / 60;
         showContents = true; //startHour < 24 - FIT_HOURS;
     }
-    console.log(props.task.name, props.task.startDate, props.task.endDate);
 
     let now = new Date();
     let busy = new Date(props.task.startDate!).getTime() <= now.getTime() && new Date(props.task.endDate!).getTime() > now.getTime();
