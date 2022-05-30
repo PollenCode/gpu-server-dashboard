@@ -225,7 +225,7 @@ function FederatedRuntimeCard(props: { runtime: FederatedRuntime & { running?: b
     );
 }
 
-export default function FederatedPage(props: { user: User }) {
+export default function FederatedPage() {
     const { data: runtimes, mutate: mutateRuntimes } = useSWR<(FederatedRuntime & { running?: boolean })[]>("/api/federated", fetcher, {
         refreshInterval: 10000,
     });
@@ -239,7 +239,7 @@ export default function FederatedPage(props: { user: User }) {
 
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar user={props.user} />
+            <NavBar />
             <Container maxW="container.lg">
                 <HStack mt={4}>
                     <Heading as="h2" size="lg">
@@ -331,6 +331,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             redirect: {
                 permanent: false,
                 destination: "/api/oauth",
+            },
+        };
+    }
+
+    if (user.role === "User") {
+        return {
+            redirect: {
+                permanent: false,
+                destination: "/app",
             },
         };
     }

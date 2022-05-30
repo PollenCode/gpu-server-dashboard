@@ -13,7 +13,7 @@ import { fetcher } from "../util";
 export default function Index(props: { user?: User }) {
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar user={props.user} />
+            <NavBar />
             <Container as="main" maxW="container.lg">
                 <Center height="96" border="4px dotted" borderColor="gray.300" mt={8} rounded="2xl">
                     <Alert status="info" maxW="400px" rounded="lg" shadow="sm">

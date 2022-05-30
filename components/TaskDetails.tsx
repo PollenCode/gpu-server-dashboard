@@ -1,4 +1,4 @@
-import { Task, User } from ".prisma/client";
+import { ApprovalStatus, Task, User } from ".prisma/client";
 import { Text, Box, Code, Heading, Badge, HStack, Link as ChakraLink } from "@chakra-ui/layout";
 import {
     Accordion,
@@ -58,7 +58,7 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
         return <Spinner />;
     }
 
-    const hasAccess = task.ownerId === user.id;
+    const hasAccess = task.ownerId === user.id || user.role !== "User";
     const now = new Date();
     const startDate = new Date(task.startDate!);
     const endDate = new Date(task.endDate!);
@@ -113,6 +113,24 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
             )}
 
             <Box my={4}>Op GPU {task.gpus.join(" en ")}.</Box>
+
+            {task.approvalStatus === ApprovalStatus.Waiting && (
+                <Alert my={4} status="warning" rounded="lg">
+                    <AlertIcon />
+                    Deze taak wordt niet uitgevoerd voordat een leerkracht hem heeft goedgekeurd.
+                </Alert>
+            )}
+
+            {task.approvalStatus === ApprovalStatus.Denied && (
+                <Alert my={4} status="error" rounded="lg">
+                    <AlertIcon />
+                    Deze taak is{" "}
+                    <Text as="span" fontWeight="semibold" mx={1}>
+                        niet
+                    </Text>
+                    goedgekeurd door een leerkracht en zal niet uitgevoerd worden.
+                </Alert>
+            )}
 
             {status === "waiting" && (
                 <Box>

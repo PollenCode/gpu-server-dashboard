@@ -10,9 +10,8 @@ import { fetcher } from "../util";
 config.autoAddCss = false;
 
 function MyApp({ Component, pageProps }: any) {
-    const { data: user } = useSWR("/api/user", fetcher);
     return (
-        <UserContext.Provider value={user}>
+        <UserContext.Provider value={pageProps.user}>
             <ChakraProvider>
                 <Component {...pageProps} />
             </ChakraProvider>

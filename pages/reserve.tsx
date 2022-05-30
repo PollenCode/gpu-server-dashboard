@@ -12,8 +12,7 @@ export default function ReservePage(props: { user: User; maxTimeBeforeApproval: 
     const router = useRouter();
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar user={props.user} />
-
+            <NavBar />
             <Container maxW="container.md">
                 <Heading my={[4, 6]} as="h2" size="lg">
                     Tijdslot Aanvragen

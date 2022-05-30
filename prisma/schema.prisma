@@ -16,6 +16,12 @@ enum Role {
     User
 }
 
+enum ApprovalStatus {
+    Waiting
+    Accepted
+    Denied
+}
+
 model User {
     id       Int    @id @default(autoincrement())
     userName String
@@ -27,14 +33,14 @@ model User {
 }
 
 model Task {
-    id                 Int      @id @default(autoincrement())
-    name               String
-    description        String?
-    containerId        String
-    waitingForApproval Boolean  @default(false)
-    gpus               Int[]
-    startDate          DateTime
-    endDate            DateTime
+    id             Int            @id @default(autoincrement())
+    name           String
+    description    String?
+    containerId    String
+    approvalStatus ApprovalStatus
+    gpus           Int[]
+    startDate      DateTime
+    endDate        DateTime
 
     mountedFolderPath String?
     scriptPath        String?

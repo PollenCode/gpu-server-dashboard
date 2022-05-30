@@ -1,12 +1,13 @@
 import { Task } from ".prisma/client";
 import next, { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
-import { getSetting, prisma, SETTING_GPU_COUNT } from "../../../db";
+import { getSetting, prisma, SETTING_GPU_COUNT, SETTING_MAX_TIME_BEFORE_APPROVAL, SETTING_MULTI_GPU_APPROVAL } from "../../../db";
 import { createJupyterContainer, docker, getRandomPort, removeContainer } from "../../../docker";
 import { IS_DEV } from "../../../util";
 import crypto from "crypto";
 import { findScheduleSpot } from "../../../db";
 import { isSpotTaken } from "../../../scheduler";
+import { ApprovalStatus } from "@prisma/client";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let userId = await getSessionUserId(req, res);
@@ -35,12 +36,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             to = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
         }
 
+        let waitingForApproval = !!req.query.waitingForApproval;
+
         let tasks = await prisma.task.findMany({
             where: {
                 endDate: {
                     gte: from,
                     lt: to,
                 },
+                approvalStatus: waitingForApproval ? ApprovalStatus.Waiting : undefined,
             },
             orderBy: {
                 startDate: "asc",
@@ -76,6 +80,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(406).end();
         }
 
+        let [maxTimeBeforeApproval, gpuCount, multiGpuApproval] = await Promise.all([
+            getSetting<number>(SETTING_MAX_TIME_BEFORE_APPROVAL),
+            getSetting<number>(SETTING_GPU_COUNT),
+            getSetting<boolean>(SETTING_MULTI_GPU_APPROVAL),
+        ]);
+
         let nextTasks = await prisma.task.findMany({
             where: {
                 endDate: {
@@ -87,7 +97,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             },
         });
 
-        let gpuCount = await getSetting<number>(SETTING_GPU_COUNT);
         let scheduledGpus: number[] = [];
         if (allGpus) {
             if (!isSpotTaken(nextTasks, trainMilliseconds, date)) {
@@ -125,6 +134,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             });
         }
 
+        let approvalRequired = trainMilliseconds > maxTimeBeforeApproval || (multiGpuApproval && allGpus);
+
         let task = await prisma.task.create({
             data: {
                 name: name,
@@ -133,6 +144,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                         id: userId,
                     },
                 },
+                approvalStatus: approvalRequired ? ApprovalStatus.Waiting : ApprovalStatus.Accepted,
                 containerId: container.id,
                 startDate: date,
                 endDate: new Date(date.getTime() + trainMilliseconds),

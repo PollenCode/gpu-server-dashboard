@@ -97,7 +97,7 @@ export default function App(props: { user: User }) {
 
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar user={props.user} />
+            <NavBar />
             <Container maxWidth="max-content">
                 <HStack mt={4}>
                     <Button

@@ -4,13 +4,15 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faArrowRight, faCalendarAlt, faCircleNodes, faNetworkWired, faSignOut, faMicrochip } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import useSWR from "swr";
 import { fetcher } from "../util";
 import Link from "next/link";
 import { Role, User } from ".prisma/client";
+import { UserContext } from "../UserContext";
 
-export function NavBar(props: { user?: User }) {
+export function NavBar() {
+    const user = useContext(UserContext);
     return (
         <Box as="header" borderBottom="1px" borderColor="gray.300" bg="white">
             <Container maxW="container.lg">
@@ -24,14 +26,14 @@ export function NavBar(props: { user?: User }) {
                         </Heading>
                     </Link>
                     <Spacer />
-                    {props.user ? (
+                    {user ? (
                         <ButtonGroup>
                             <Link href="/app">
                                 <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt as IconProp} />}>
                                     Kalender
                                 </Button>
                             </Link>
-                            {props.user.role !== Role.User && (
+                            {user.role !== Role.User && (
                                 <Link href="/federated">
                                     <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}>
                                         Federated Runtimes
