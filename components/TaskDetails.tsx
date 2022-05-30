@@ -125,7 +125,7 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
                         <Text as="span" fontWeight="semibold">
                             {startDate.toLocaleString()}
                         </Text>
-                        .
+                        . Duurt {ms(endDate.getTime() - startDate.getTime())}.
                     </Text>
                     <ButtonGroup mt={4}>
                         {hasAccess && (

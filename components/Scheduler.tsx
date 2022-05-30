@@ -31,7 +31,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
     // Only show the information about this task in a UI spot that can fit x hours
     const FIT_HOURS = 2;
 
-    if (new Date(props.task.endDate!).getTime() > props.dayEnd.getTime()) {
+    if (new Date(props.task.endDate!).getTime() >= props.dayEnd.getTime()) {
         // This task will end on another day
         endHour = 24;
     } else {
@@ -48,6 +48,7 @@ function SchedulerTask(props: { task: Task; dayStart: Date; dayEnd: Date; color?
         startHour = d.getHours() + d.getMinutes() / 60;
         showContents = true; //startHour < 24 - FIT_HOURS;
     }
+    console.log(props.task.name, props.task.startDate, props.task.endDate);
 
     let now = new Date();
     let busy = new Date(props.task.startDate!).getTime() <= now.getTime() && new Date(props.task.endDate!).getTime() > now.getTime();
@@ -95,6 +96,7 @@ export function Scheduler(props: { tasks: Task[]; weekDay?: Date; loading?: bool
     startOfWeek.setSeconds(0);
     startOfWeek.setMinutes(0);
     startOfWeek.setHours(0);
+    startOfWeek.setMilliseconds(0);
 
     return (
         <Grid templateColumns="repeat(7, auto)" overflow="auto" gap={4} my={4}>
