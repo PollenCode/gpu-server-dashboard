@@ -11,6 +11,7 @@ import {
     faUsers,
     faTools,
     faChevronDown,
+    faTasks,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
@@ -51,6 +52,9 @@ export function NavBar() {
                                         {user.role}
                                     </MenuButton>
                                     <MenuList>
+                                        <MenuItem icon={<FontAwesomeIcon icon={faTasks as IconProp} />} onClick={() => router.push("/admin/tasks")}>
+                                            Taken
+                                        </MenuItem>
                                         <MenuItem
                                             icon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}
                                             onClick={() => router.push("/admin/federated")}>

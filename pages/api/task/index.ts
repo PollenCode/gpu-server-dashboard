@@ -10,8 +10,8 @@ import { isSpotTaken } from "../../../scheduler";
 import { ApprovalStatus } from "@prisma/client";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-    let userId = await getSessionUserId(req, res);
-    if (!userId) {
+    let user = await getSessionUser(req, res);
+    if (!user) {
         return res.status(401).end();
     }
 
@@ -36,7 +36,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             to = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
         }
 
-        let waitingForApproval = !!req.query.waitingForApproval;
+        let waitingForApproval = req.query.waitingForApproval === "true";
 
         let tasks = await prisma.task.findMany({
             where: {
@@ -56,6 +56,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 name: true,
                 gpus: true,
                 id: true,
+                approvalStatus: true,
                 owner: {
                     select: {
                         id: true,
@@ -134,14 +135,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             });
         }
 
-        let approvalRequired = trainMilliseconds > maxTimeBeforeApproval || (multiGpuApproval && allGpus);
+        let approvalRequired = user.role === "User" && (trainMilliseconds > maxTimeBeforeApproval || (multiGpuApproval && allGpus));
 
         let task = await prisma.task.create({
             data: {
                 name: name,
                 owner: {
                     connect: {
-                        id: userId,
+                        id: user.id,
                     },
                 },
                 approvalStatus: approvalRequired ? ApprovalStatus.Waiting : ApprovalStatus.Accepted,

@@ -1,12 +1,12 @@
 import { Task } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
-import { getSessionUserId } from "../../../auth";
+import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
 import { docker, removeContainer } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-    let userId = await getSessionUserId(req, res);
-    if (!userId) {
+    let user = await getSessionUser(req, res);
+    if (!user) {
         return res.status(401).end();
     }
 
@@ -31,9 +31,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             },
         });
 
-        if (!task) return res.status(404).end();
+        if (!task) {
+            return res.status(404).end();
+        }
 
-        if (userId !== task.ownerId) {
+        if (user.id !== task.ownerId && user.role === "User") {
             delete task.notebookPort;
             delete task.notebookToken;
             delete task.scriptPath;
@@ -41,6 +43,32 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         return res.json(task);
+    } else if (req.method === "PATCH") {
+        let data = req.body;
+        let task = await prisma.task.findUnique({
+            where: {
+                id: taskId,
+            },
+        });
+
+        if (!task) {
+            return res.status(404).end();
+        }
+
+        if (user.id !== task.ownerId && user.role === "User") {
+            return res.status(403).end();
+        }
+
+        let newTask = await prisma.task.update({
+            where: {
+                id: taskId,
+            },
+            data: {
+                approvalStatus: user.role !== "User" && data.approvalStatus ? data.approvalStatus : undefined,
+            },
+        });
+
+        res.json(newTask);
     } else if (req.method === "DELETE") {
         let task = await prisma.task.findUnique({
             where: {
@@ -48,9 +76,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             },
         });
 
-        if (!task) return res.status(404).end();
+        if (!task) {
+            return res.status(404).end();
+        }
 
-        if (userId !== task.ownerId) return res.status(403).end();
+        if (user.id !== task.ownerId && user.role === "User") {
+            return res.status(403).end();
+        }
 
         if (task.containerId) {
             let container = docker.getContainer(task.containerId);

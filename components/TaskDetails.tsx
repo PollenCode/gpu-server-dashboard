@@ -45,6 +45,10 @@ export function TaskDetails(props: { taskId: number; onClose: () => void }) {
     }
 
     async function deleteTask() {
+        if (!confirm("Ben je zeker dat je deze taak wilt verwijderen?")) {
+            return;
+        }
+
         let res = await fetch("/api/task/" + props.taskId, {
             method: "DELETE",
         });
