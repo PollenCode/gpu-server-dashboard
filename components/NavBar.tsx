@@ -1,7 +1,17 @@
 import { Box, Container, Flex, Heading, Spacer } from "@chakra-ui/layout";
-import { Button, ButtonGroup } from "@chakra-ui/react";
+import { Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowRight, faCalendarAlt, faCircleNodes, faNetworkWired, faSignOut, faMicrochip } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowRight,
+    faCalendarAlt,
+    faCircleNodes,
+    faNetworkWired,
+    faSignOut,
+    faMicrochip,
+    faUsers,
+    faTools,
+    faChevronDown,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
 import React, { useContext, useEffect } from "react";
@@ -13,6 +23,7 @@ import { UserContext } from "../UserContext";
 
 export function NavBar() {
     const user = useContext(UserContext);
+    const router = useRouter();
     return (
         <Box as="header" borderBottom="1px" borderColor="gray.300" bg="white">
             <Container maxW="container.lg">
@@ -33,15 +44,26 @@ export function NavBar() {
                                     Kalender
                                 </Button>
                             </Link>
+
                             {user.role !== Role.User && (
-                                <Link href="/federated">
-                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}>
-                                        Federated Runtimes
-                                    </Button>
-                                </Link>
+                                <Menu>
+                                    <MenuButton colorScheme="orange" as={Button} rightIcon={<FontAwesomeIcon icon={faChevronDown} />}>
+                                        {user.role}
+                                    </MenuButton>
+                                    <MenuList>
+                                        <MenuItem
+                                            icon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}
+                                            onClick={() => router.push("/admin/federated")}>
+                                            Federated Runtimes
+                                        </MenuItem>
+                                        <MenuItem icon={<FontAwesomeIcon icon={faUsers as IconProp} />} onClick={() => router.push("/admin/users")}>
+                                            Gebruikers
+                                        </MenuItem>
+                                    </MenuList>
+                                </Menu>
                             )}
                             <Link href="/api/logout">
-                                <Button rightIcon={<FontAwesomeIcon icon={faSignOut as IconProp} />}>Logout</Button>
+                                <Button rightIcon={<FontAwesomeIcon icon={faSignOut as IconProp} />}>Uitloggen</Button>
                             </Link>
                         </ButtonGroup>
                     ) : (

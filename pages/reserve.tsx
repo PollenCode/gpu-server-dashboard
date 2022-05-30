@@ -17,7 +17,7 @@ export default function ReservePage(props: { user: User; maxTimeBeforeApproval: 
                 <Heading my={[4, 6]} as="h2" size="lg">
                     Tijdslot Aanvragen
                 </Heading>
-                <Box bgColor="white" p={[4, 8]} rounded="lg">
+                <Box bgColor="white" p={[4, 8]} rounded="lg" border="1px solid" borderColor="gray.300">
                     <ReserveTaskForm
                         gpuCount={props.gpuCount}
                         noApproval={props.user.role !== Role.User}
