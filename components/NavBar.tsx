@@ -8,7 +8,7 @@ import React, { useEffect } from "react";
 import useSWR from "swr";
 import { fetcher } from "../util";
 import Link from "next/link";
-import { User } from ".prisma/client";
+import { Role, User } from ".prisma/client";
 
 export function NavBar(props: { user?: User }) {
     return (
@@ -31,11 +31,13 @@ export function NavBar(props: { user?: User }) {
                                     Kalender
                                 </Button>
                             </Link>
-                            <Link href="/federated">
-                                <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}>
-                                    Federated Runtimes
-                                </Button>
-                            </Link>
+                            {props.user.role !== Role.User && (
+                                <Link href="/federated">
+                                    <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCircleNodes as IconProp} />}>
+                                        Federated Runtimes
+                                    </Button>
+                                </Link>
+                            )}
                             <Link href="/api/logout">
                                 <Button rightIcon={<FontAwesomeIcon icon={faSignOut as IconProp} />}>Logout</Button>
                             </Link>
