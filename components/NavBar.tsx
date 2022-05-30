@@ -1,7 +1,7 @@
 import { Box, Container, Flex, Heading, Spacer } from "@chakra-ui/layout";
 import { Button, ButtonGroup } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faArrowRight, faCalendarAlt, faCircleNodes, faNetworkWired, faSignOut } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faCalendarAlt, faCircleNodes, faNetworkWired, faSignOut, faMicrochip } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
@@ -17,6 +17,9 @@ export function NavBar() {
         <Box as="header" borderBottom="1px" borderColor="gray.300" bg="white">
             <Container maxW="container.lg">
                 <Flex alignItems="center" as="nav">
+                    <Box fontSize="2xl" mr={2}>
+                        <FontAwesomeIcon icon={faMicrochip} />
+                    </Box>
                     <Link href="/">
                         <Heading py={4} size="md">
                             GPU Manager
