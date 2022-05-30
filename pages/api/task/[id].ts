@@ -6,7 +6,9 @@ import { docker, removeContainer } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let userId = await getSessionUserId(req, res);
-    if (!userId) return;
+    if (!userId) {
+        return res.status(401).end();
+    }
 
     let taskId = parseInt(req.query.id as any);
     if (isNaN(taskId)) {

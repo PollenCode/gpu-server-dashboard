@@ -1,3 +1,4 @@
+import { Role } from ".prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser } from "../../../auth";
 import { prisma } from "../../../db";
@@ -5,9 +6,11 @@ import { docker, removeContainer } from "../../../docker";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let user = await getSessionUser(req, res);
-    if (!user) return;
+    if (!user) {
+        return res.status(401).end();
+    }
 
-    if (user.role < 1) {
+    if (user.role === Role.User) {
         return res.status(403).end();
     }
 
@@ -48,11 +51,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(406).end();
         }
 
-        // Only authors and users with a higher role can update this federated runtime
-        if (federated.author && federated.author.id != user.id && federated.author.role >= user.role) {
-            return res.status(403).end();
-        }
-
         let updatedFederated = await prisma.federatedRuntime.update({
             where: {
                 id: id,
@@ -64,11 +62,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         return res.json(updatedFederated);
     } else if (req.method === "DELETE") {
-        // Only authors and users with a higher role can delete this federated runtime
-        if (federated.author && federated.author.id != user.id && federated.author.role >= user.role) {
-            return res.status(403).end();
-        }
-
         await prisma.federatedRuntime.delete({
             where: {
                 id: id,

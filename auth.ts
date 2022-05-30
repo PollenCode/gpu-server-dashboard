@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { BaseClient, Issuer } from "openid-client";
 import jwt from "jsonwebtoken";
 import { prisma } from "./db";
+import { IncomingMessage, ServerResponse } from "http";
+import { NextApiRequestCookies } from "next/dist/server/api-utils";
 
 // clientId: process.env.OAUTH_MS_CLIENT_ID!,
 // clientSecret: process.env.OAUTH_MS_CLIENT_SECRET!,
@@ -23,10 +25,9 @@ export async function setupOauth() {
     }
 }
 
-export async function getSessionUserId(req: NextApiRequest, res: NextApiResponse): Promise<number | null> {
+export async function getSessionUserId(req: IncomingMessage & { cookies: NextApiRequestCookies }, res: ServerResponse): Promise<number | null> {
     let cookie = req.cookies["gpuserver"];
     if (!cookie) {
-        res.status(401).end();
         return null;
     }
 
@@ -35,14 +36,13 @@ export async function getSessionUserId(req: NextApiRequest, res: NextApiResponse
         userId = (jwt.verify(cookie, process.env.COOKIE_SECRET!) as any)?.userId;
     } catch (ex) {
         console.error("Could not verify jwt token", ex);
-        res.status(400).end();
         return null;
     }
 
     return userId;
 }
 
-export async function getSessionUser(req: NextApiRequest, res: NextApiResponse) {
+export async function getSessionUser(req: IncomingMessage & { cookies: NextApiRequestCookies }, res: ServerResponse) {
     let userId = await getSessionUserId(req, res);
     if (!userId) return null;
 

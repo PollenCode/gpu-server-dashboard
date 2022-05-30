@@ -10,26 +10,36 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum Role {
+    Administrator // Can create new moderators and administrators, and set permissions for users
+    Moderator // Can set permissions for users
+    User
+}
+
 model User {
-    id                Int                @id @default(autoincrement())
-    userName          String
-    email             String             @unique
-    role              Int                @default(0)
+    id       Int    @id @default(autoincrement())
+    userName String
+    email    String @unique
+    role     Role   @default(User)
+
     tasks             Task[]
     federatedRuntimes FederatedRuntime[]
 }
 
 model Task {
-    id            Int       @id @default(autoincrement())
-    name          String
-    description   String?
-    containerId   String?
-    gpus          Int[]
-    startDate     DateTime?
-    endDate       DateTime?
-    scriptPath    String?
-    notebookPort  Int?
-    notebookToken String?
+    id                 Int      @id @default(autoincrement())
+    name               String
+    description        String?
+    containerId        String
+    waitingForApproval Boolean  @default(false)
+    gpus               Int[]
+    startDate          DateTime
+    endDate            DateTime
+
+    mountedFolderPath String?
+    scriptPath        String?
+    notebookPort      Int?
+    notebookToken     String?
 
     owner   User @relation(fields: [ownerId], references: [id])
     ownerId Int
@@ -42,4 +52,10 @@ model FederatedRuntime {
     port        Int?
     author      User?   @relation(fields: [authorId], references: [id])
     authorId    Int?
+}
+
+model Settings {
+    id    Int    @id @default(autoincrement())
+    key   String @unique
+    value Json
 }

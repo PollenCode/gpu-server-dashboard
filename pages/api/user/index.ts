@@ -6,7 +6,9 @@ import { getSessionUser } from "../../../auth";
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === "GET") {
         let user = await getSessionUser(req, res);
-        if (!user) return;
+        if (!user) {
+            return res.status(401).end();
+        }
         res.json(user);
     } else {
         return res.status(405).end();

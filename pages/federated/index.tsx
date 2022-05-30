@@ -1,4 +1,4 @@
-import { FederatedRuntime } from ".prisma/client";
+import { FederatedRuntime, User } from ".prisma/client";
 import { Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel } from "@chakra-ui/accordion";
 import { Alert, AlertIcon } from "@chakra-ui/alert";
 import { Button, ButtonGroup } from "@chakra-ui/button";
@@ -27,8 +27,10 @@ import { Spinner } from "@chakra-ui/spinner";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faArrowRight, faArrowRightLong, faInfoCircle, faPlay, faPlus, faStop, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { GetServerSideProps } from "next";
 import React, { useContext, useEffect, useState } from "react";
 import useSWR from "swr";
+import { getSessionUser } from "../../auth";
 import { NavBar } from "../../components/NavBar";
 import { UserContext } from "../../UserContext";
 import { fetcher } from "../../util";
@@ -82,8 +84,6 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
         return <Spinner />;
     }
 
-    const hasRights = !runtime.federated.author || user.role > runtime.federated.author.role || user.id === runtime.federated.authorId;
-
     return (
         <Box>
             <Heading mt={2} size="md" as="h2">
@@ -124,7 +124,7 @@ function FederatedRuntimeDetails(props: { runtimeId: number; onClose: () => void
                 <ButtonGroup>
                     <Button
                         isLoading={loading === "delete"}
-                        disabled={!hasRights || loading !== undefined}
+                        disabled={loading !== undefined}
                         onClick={() => deleteRuntime()}
                         colorScheme="red"
                         leftIcon={<FontAwesomeIcon icon={faTrash as IconProp} />}>
@@ -225,7 +225,7 @@ function FederatedRuntimeCard(props: { runtime: FederatedRuntime & { running?: b
     );
 }
 
-export default function FederatedPage() {
+export default function FederatedPage(props: { user: User }) {
     const { data: runtimes, mutate: mutateRuntimes } = useSWR<(FederatedRuntime & { running?: boolean })[]>("/api/federated", fetcher, {
         refreshInterval: 10000,
     });
@@ -239,7 +239,7 @@ export default function FederatedPage() {
 
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar />
+            <NavBar user={props.user} />
             <Container maxW="container.lg">
                 <HStack mt={4}>
                     <Heading as="h2" size="lg">
@@ -322,3 +322,22 @@ export default function FederatedPage() {
         </Box>
     );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    let user = await getSessionUser(context.req, context.res);
+
+    if (!user) {
+        return {
+            redirect: {
+                permanent: false,
+                destination: "/api/oauth",
+            },
+        };
+    }
+
+    return {
+        props: {
+            user: user,
+        },
+    };
+};

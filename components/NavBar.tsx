@@ -8,11 +8,9 @@ import React, { useEffect } from "react";
 import useSWR from "swr";
 import { fetcher } from "../util";
 import Link from "next/link";
+import { User } from ".prisma/client";
 
-export function NavBar() {
-    const { data: user } = useSWR("/api/user", fetcher);
-    const router = useRouter();
-
+export function NavBar(props: { user?: User }) {
     return (
         <Box as="header" borderBottom="1px" borderColor="gray.300" bg="white">
             <Container maxW="container.lg">
@@ -26,9 +24,9 @@ export function NavBar() {
                         </Heading>
                     </Link>
                     <Spacer />
-                    {user ? (
+                    {props.user ? (
                         <ButtonGroup>
-                            <Link href={"/app"}>
+                            <Link href="/app">
                                 <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt as IconProp} />}>
                                     Kalender
                                 </Button>
@@ -43,7 +41,7 @@ export function NavBar() {
                             </Link>
                         </ButtonGroup>
                     ) : (
-                        <Link href={"/api/oauth"}>
+                        <Link href="/api/oauth">
                             <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faArrowRight as IconProp} />}>
                                 Log in
                             </Button>

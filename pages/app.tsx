@@ -1,4 +1,4 @@
-import { Task } from ".prisma/client";
+import { Task, User } from ".prisma/client";
 import {
     Text,
     Box,
@@ -75,9 +75,10 @@ import { UserContext } from "../UserContext";
 import { fetcher, GPU_COUNT } from "../util";
 import { ReserveTaskForm } from "../components/ReserveTaskForm";
 import { Scheduler } from "../components/Scheduler";
+import { GetServerSideProps } from "next";
+import { getSessionUser } from "../auth";
 
-export default function App() {
-    const { data: user, isValidating } = useSWR("/api/user", fetcher);
+export default function App(props: { user: User }) {
     const router = useRouter();
     const { data: tasks, mutate } = useSWR<Task[]>("/api/task", fetcher, { refreshInterval: 20000 });
     const now = new Date();
@@ -87,15 +88,9 @@ export default function App() {
     const [selectedTask, setSelectedTask] = useState<Task>();
     const { isOpen: drawerIsOpen, onOpen: drawerOnOpen, onClose: drawerOnClose } = useDisclosure();
 
-    useEffect(() => {
-        if (!isValidating && !user) {
-            router.push("/");
-        }
-    }, [user, isValidating]);
-
     return (
         <Box bg="gray.100" minH="100vh">
-            <NavBar />
+            <NavBar user={props.user} />
             <Container maxWidth="max-content">
                 <HStack mt={4}>
                     <Button
@@ -206,3 +201,22 @@ export default function App() {
         </Box>
     );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    let user = await getSessionUser(context.req, context.res);
+
+    if (!user) {
+        return {
+            redirect: {
+                permanent: false,
+                destination: "/api/oauth",
+            },
+        };
+    }
+
+    return {
+        props: {
+            user: user,
+        },
+    };
+};

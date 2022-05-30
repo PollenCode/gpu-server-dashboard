@@ -1,4 +1,4 @@
-import { FederatedRuntime } from ".prisma/client";
+import { FederatedRuntime, Role } from ".prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSessionUser, getSessionUserId } from "../../../auth";
 import { prisma } from "../../../db";
@@ -6,9 +6,11 @@ import { createFederatedContainer, docker, getRandomPort } from "../../../docker
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let user = await getSessionUser(req, res);
-    if (!user) return;
+    if (!user) {
+        return res.status(401).end();
+    }
 
-    if (user.role < 1) {
+    if (user.role === Role.User) {
         return res.status(403).end();
     }
 

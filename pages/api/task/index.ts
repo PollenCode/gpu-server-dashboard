@@ -49,7 +49,9 @@ function findScheduleSpot(tasks: Task[], trainMilliseconds: number, allGpus: boo
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     let userId = await getSessionUserId(req, res);
-    if (!userId) return;
+    if (!userId) {
+        return res.status(401).end();
+    }
 
     if (req.method === "GET") {
         let from = new Date();
@@ -91,11 +93,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         let nextTasks = await prisma.task.findMany({
             where: {
-                startDate: {
-                    not: null,
-                },
                 endDate: {
-                    not: null,
                     gte: new Date(),
                 },
             },
