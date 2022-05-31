@@ -1,5 +1,5 @@
 import { Box, Container, Flex, Heading, Spacer } from "@chakra-ui/layout";
-import { Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from "@chakra-ui/react";
+import { Avatar, Button, ButtonGroup, IconButton, Menu, MenuButton, MenuItem, MenuList } from "@chakra-ui/react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
     faArrowRight,
@@ -12,6 +12,8 @@ import {
     faTools,
     faChevronDown,
     faTasks,
+    faUser,
+    faTemperatureHalf,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
@@ -40,6 +42,11 @@ export function NavBar() {
                     <Spacer />
                     {user ? (
                         <ButtonGroup>
+                            <Link href="/">
+                                <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faTemperatureHalf as IconProp} />}>
+                                    Status
+                                </Button>
+                            </Link>
                             <Link href="/app">
                                 <Button colorScheme="blue" rightIcon={<FontAwesomeIcon icon={faCalendarAlt as IconProp} />}>
                                     Kalender
@@ -66,9 +73,22 @@ export function NavBar() {
                                     </MenuList>
                                 </Menu>
                             )}
-                            <Link href="/api/logout">
-                                <Button rightIcon={<FontAwesomeIcon icon={faSignOut as IconProp} />}>Uitloggen</Button>
-                            </Link>
+
+                            <Menu>
+                                <MenuButton
+                                    as={IconButton}
+                                    variant="ghost"
+                                    aria-label="User"
+                                    icon={<Avatar size="sm" name={user.userName} />}></MenuButton>
+                                <MenuList>
+                                    <MenuItem icon={<FontAwesomeIcon icon={faUser} />} onClick={() => router.push("/account")}>
+                                        Mijn account
+                                    </MenuItem>
+                                    <MenuItem icon={<FontAwesomeIcon icon={faSignOut} />} onClick={() => router.push("/api/logout")}>
+                                        Uitloggen
+                                    </MenuItem>
+                                </MenuList>
+                            </Menu>
                         </ButtonGroup>
                     ) : (
                         <Link href="/api/oauth">
