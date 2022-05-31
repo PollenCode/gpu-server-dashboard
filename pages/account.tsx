@@ -50,7 +50,7 @@ export default function Account() {
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar />
-            <Container maxW="container.md">
+            <Container maxW="container.lg">
                 <HStack my={4}>
                     <Avatar name={user.userName} />{" "}
                     <Box>
