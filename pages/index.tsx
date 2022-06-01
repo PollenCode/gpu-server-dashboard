@@ -15,6 +15,7 @@ import {
     Grid,
     GridItem,
     Flex,
+    Spinner,
 } from "@chakra-ui/react";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,7 +27,8 @@ import { getSessionUser } from "../auth";
 import { NavBar } from "../components/NavBar";
 import { fetcher } from "../util";
 
-export default function Index(props: { user?: User }) {
+export default function Index() {
+    const { data } = useSWR("/api/serverStats", fetcher, { refreshInterval: 1000, dedupingInterval: 1000 });
     return (
         <Box bg="gray.100" minH="100vh">
             <NavBar />
@@ -52,12 +54,18 @@ export default function Index(props: { user?: User }) {
                             <Text fontSize="4xl" fontWeight="bold">
                                 Nvidia A6000
                             </Text>
-                            <Text fontSize="4xl" fontWeight="semibold">
-                                100°C
-                            </Text>
-                            <Text fontSize="4xl" fontWeight="semibold">
-                                100%
-                            </Text>
+                            {data ? (
+                                <>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.gpu[0].temperature.toFixed(1)}°C
+                                    </Text>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.gpu[0].usage.toFixed(1)}%
+                                    </Text>
+                                </>
+                            ) : (
+                                <Spinner />
+                            )}
                         </Center>
                     </GridItem>
                     <GridItem justifyContent="center">
@@ -65,12 +73,18 @@ export default function Index(props: { user?: User }) {
                             <Text fontSize="4xl" fontWeight="bold">
                                 Nvidia A6000
                             </Text>
-                            <Text fontSize="4xl" fontWeight="semibold">
-                                100°C
-                            </Text>
-                            <Text fontSize="4xl" fontWeight="semibold">
-                                100%
-                            </Text>
+                            {data ? (
+                                <>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.gpu[1].temperature.toFixed(1)}°C
+                                    </Text>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.gpu[1].usage.toFixed(1)}%
+                                    </Text>
+                                </>
+                            ) : (
+                                <Spinner />
+                            )}
                         </Center>
                     </GridItem>
                     <GridItem>
@@ -78,9 +92,18 @@ export default function Index(props: { user?: User }) {
                             <Text fontSize="4xl" fontWeight="bold">
                                 Intel Xeon
                             </Text>
-                            <Text fontSize="4xl" fontWeight="semibold">
-                                X graden
-                            </Text>
+                            {data ? (
+                                <>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.cpu.temperature.toFixed(1)}°C
+                                    </Text>
+                                    <Text fontSize="4xl" fontWeight="semibold">
+                                        {data.cpu.usage.toFixed(1)}%
+                                    </Text>
+                                </>
+                            ) : (
+                                <Spinner />
+                            )}
                         </Center>
                     </GridItem>
                 </Grid>
